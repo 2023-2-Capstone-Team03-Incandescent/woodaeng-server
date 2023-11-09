@@ -6,10 +6,10 @@ import com.incandescent.woodaengserver.service.auth.AuthService;
 import com.incandescent.woodaengserver.service.auth.JwtTokenProvider;
 import com.incandescent.woodaengserver.service.UserService;
 import com.incandescent.woodaengserver.domain.User;
-import com.incandescent.woodaengserver.util.CustomException;
-import com.incandescent.woodaengserver.util.ResponseStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -45,15 +45,15 @@ public class AuthController {
         User user = new User(postUserReq.getEmail(), postUserReq.getNickname(), encodedPassword, "ROLE_USER", "none", "none");
         try {
             userService.createUser(user);
-            return ResponseEntity.ok().build();
-        } catch (CustomException e) {
-            return ResponseEntity.badRequest().body(e.getStatus());
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     @PostMapping("/signin")
-    public ResponseEntity login(@RequestBody UserSigninRequest postLoginReq) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(postLoginReq.getEmail(), postLoginReq.getPassword());
+    public ResponseEntity login(@RequestBody UserSigninRequest userSigninRequest) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userSigninRequest.getEmail(), userSigninRequest.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
         PrincipalDetails userEntity = (PrincipalDetails) authentication.getPrincipal();
@@ -63,34 +63,62 @@ public class AuthController {
         String refreshToken = jwtTokenProvider.createRefreshToken(id);
 
         authService.registerRefreshToken(id, refreshToken);
-        return ResponseEntity.ok(new UserSigninResponse(accessToken, refreshToken));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        return ResponseEntity.status(HttpStatus.OK)
+                .headers(headers)
+                .body(new UserSigninResponse(accessToken, refreshToken));
     }
 
-    @PostMapping("/signin/re")
-    public ResponseEntity relogin(@RequestBody UserReSigninRequest userReSigninRequest) throws CustomException {
+    @PostMapping("/signin/auto")
+    public ResponseEntity relogin(@RequestBody UserReSigninRequest userReSigninRequest) throws Exception {
         String accessToken = userReSigninRequest.getAccessToken();
-        String refreshToken = userReSigninRequest.getRefreshToken();
 
-        if(jwtTokenProvider.getExpiration(accessToken) > 0) {
-            return ResponseEntity.ok(new UserSigninResponse(accessToken, refreshToken));
+        try {
+            if(jwtTokenProvider.getExpiration(accessToken) > 0)
+                return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        else if (jwtTokenProvider.getExpiration(refreshToken) > 0) {
-            Long id = jwtTokenProvider.getUseridFromRef(refreshToken);
-            try {
-                if(userProvider.retrieveById(id) != null) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    @PostMapping("/signin/auto/newtk")
+    public ResponseEntity reissue(@RequestBody UserReSigninNewTokenRequest userReSigninNewTokenRequest) throws Exception {
+        String accessToken = userReSigninNewTokenRequest.getAccessToken();
+        String refreshToken = userReSigninNewTokenRequest.getRefreshToken();
+
+        try {
+            if (jwtTokenProvider.getExpiration(accessToken) > 0)
+                return ResponseEntity.status(HttpStatus.OK).build();
+            else if (jwtTokenProvider.getExpiration(refreshToken) > 0) {
+                Long id = jwtTokenProvider.getUseridFromRef(refreshToken);
+                if (userProvider.retrieveById(id) != null) {
                     String newAccessToken = jwtTokenProvider.createAccessToken(id);
-                    return ResponseEntity.ok(new UserSigninResponse(newAccessToken, refreshToken));
-                }
-            } catch (CustomException e) {
-                return ResponseEntity.notFound().build();
+
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add("Content-Type", "application/json");
+
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .headers(headers)
+                            .body(new UserSigninResponse(newAccessToken, refreshToken));
+                } else
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        throw new CustomException(ResponseStatus.EXPIRED_JWT);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @GetMapping("/oauth2/success")
     public ResponseEntity loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken) {
         UserSigninResponse postLoginRes = new UserSigninResponse(accessToken, refreshToken);
-        return ResponseEntity.ok(postLoginRes);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        return ResponseEntity.status(HttpStatus.OK)
+                .headers(headers)
+                .body(postLoginRes);
     }
 }

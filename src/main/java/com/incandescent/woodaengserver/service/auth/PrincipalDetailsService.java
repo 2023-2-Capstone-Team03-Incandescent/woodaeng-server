@@ -2,7 +2,6 @@ package com.incandescent.woodaengserver.service.auth;
 
 import com.incandescent.woodaengserver.dto.PrincipalDetails;
 import com.incandescent.woodaengserver.service.UserProvider;
-import com.incandescent.woodaengserver.util.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,7 +23,7 @@ public class PrincipalDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         try {
             return new PrincipalDetails(userProvider.retrieveByEmail(email));
-        } catch (CustomException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

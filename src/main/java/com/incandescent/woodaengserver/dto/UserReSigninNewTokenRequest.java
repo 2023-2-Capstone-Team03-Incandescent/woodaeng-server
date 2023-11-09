@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserReSigninRequest {
+public class UserReSigninNewTokenRequest {
     private String accessToken;
+    private String refreshToken;
 }

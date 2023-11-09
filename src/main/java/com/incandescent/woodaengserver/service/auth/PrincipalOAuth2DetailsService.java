@@ -8,7 +8,6 @@ import com.incandescent.woodaengserver.dto.oauth2.OAuth2UserInfo;
 import com.incandescent.woodaengserver.domain.User;
 import com.incandescent.woodaengserver.service.UserProvider;
 import com.incandescent.woodaengserver.service.UserService;
-import com.incandescent.woodaengserver.util.CustomException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -66,7 +65,7 @@ public class PrincipalOAuth2DetailsService extends DefaultOAuth2UserService {
             }else {
                 user = userProvider.retrieveByEmail(email);
             }
-        } catch (CustomException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

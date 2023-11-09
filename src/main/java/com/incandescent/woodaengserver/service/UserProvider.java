@@ -2,12 +2,9 @@ package com.incandescent.woodaengserver.service;
 
 import com.incandescent.woodaengserver.domain.User;
 import com.incandescent.woodaengserver.repository.UserRepository;
-import com.incandescent.woodaengserver.util.CustomException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import static com.incandescent.woodaengserver.util.ResponseStatus.*;
 
 @Slf4j
 @Service
@@ -20,43 +17,43 @@ public class UserProvider {
         this.userRepository = userRepository;
     }
 
-    public User retrieveByEmail(String email) throws CustomException {
+    public User retrieveByEmail(String email) throws Exception {
         if (checkEmail(email) == 0)
-            throw new CustomException(USERS_EMPTY_USER_EMAIL);
+            throw new Exception("Invalid Email");
         try {
             return userRepository.selectByEmail(email);
         } catch (Exception e) {
-            throw new CustomException(DATABASE_ERROR);
+            throw new Exception("Database Error");
         }
 
     }
 
-    public User retrieveById(Long user_id) throws CustomException {
+    public User retrieveById(Long user_id) throws Exception {
         if (checkId(user_id) == 0)
-            throw new CustomException(USERS_EMPTY_USER_ID);
+            throw new Exception("Invalid Id");
         try {
             return userRepository.selectById(user_id);
         } catch (Exception e) {
-            throw new CustomException(DATABASE_ERROR);
+            throw new Exception("Database Error");
         }
     }
 
-    public int checkEmail(String email) throws CustomException {
+    public int checkEmail(String email) throws Exception {
         try {
             return userRepository.checkEmail(email);
         } catch (Exception exception) {
             log.warn(exception.getMessage());
-            throw new CustomException(DATABASE_ERROR);
+            throw new Exception("Database Error");
         }
     }
 
 
-    public int checkId(Long id) throws CustomException {
+    public int checkId(Long id) throws Exception {
         try {
             return userRepository.checkId(id);
         } catch (Exception exception) {
             log.warn(exception.getMessage());
-            throw new CustomException(DATABASE_ERROR);
+            throw new Exception("Database Error");
         }
     }
 }

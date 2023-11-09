@@ -1,27 +1,38 @@
 package com.incandescent.woodaengserver.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.incandescent.woodaengserver.util.ResponseStatus.*;
-
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        log.info("401 ERROR");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{" + "\"isSuccess\":false, "
-                + "\"code\":\"" + INVALID_AUTH.getCode() +"\","
-                + "\"message\":\"" + INVALID_AUTH.getMessage() + "\"}");
+        String errorType = "Authentication failed";
 
-        response.getWriter().flush();
+        // BadCredentialsException
+        if(authException instanceof BadCredentialsException){
+            errorType = "password";
+        }
+
+        // UsernameNotFoundException
+        if(authException instanceof UsernameNotFoundException){
+            errorType = "username";
+        }
+
+        log.info("Authentication failed : " + errorType);
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"Authentication failed\", \"type\": \"" + errorType + "\"}");
     }
 }
