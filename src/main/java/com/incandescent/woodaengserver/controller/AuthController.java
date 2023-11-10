@@ -47,7 +47,7 @@ public class AuthController {
             userService.createUser(user);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); //409
         }
     }
 
