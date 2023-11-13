@@ -8,6 +8,7 @@ import com.incandescent.woodaengserver.service.UserService;
 import com.incandescent.woodaengserver.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ public class AuthController {
     private final AuthService authService;
 
     @Autowired
+    @Lazy
     public AuthController(PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserService userService, UserProvider userProvider, AuthService authService) {
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;

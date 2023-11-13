@@ -10,6 +10,7 @@ import com.incandescent.woodaengserver.service.UserProvider;
 import com.incandescent.woodaengserver.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -28,6 +29,7 @@ public class PrincipalOAuth2DetailsService extends DefaultOAuth2UserService {
     private final UserService userService;
 
     @Autowired
+    @Lazy
     public PrincipalOAuth2DetailsService(PasswordEncoder passwordEncoder, UserProvider userProvider, UserService userService) {
         this.passwordEncoder = passwordEncoder;
         this.userProvider = userProvider;

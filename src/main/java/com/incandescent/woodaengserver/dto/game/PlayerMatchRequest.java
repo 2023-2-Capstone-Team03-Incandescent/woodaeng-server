@@ -1,4 +1,4 @@
-package com.incandescent.woodaengserver.dto;
+package com.incandescent.woodaengserver.dto.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlayerMatchRequest {
-    private Long id;
-    private String nickname;
+    private String id;
     private double latitude;
     private double longitude;
-    private int team;
-    private Long game_code;
 }
