@@ -38,7 +38,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-//		return new BCryptPasswordEncoder();
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
@@ -51,8 +50,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors((cors) -> cors
-                        .configurationSource(corsConfigurationSource()))
                 .sessionManagement((sessionManagement) -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling((exceptionConfig) -> exceptionConfig
@@ -63,21 +60,5 @@ public class SecurityConfig {
                                 .userService(principalOAuth2DetailsService))
                         .successHandler(new OAuth2SuccessHandler(jwtTokenProvider,authService)));
         return http.build();
-    }
-
-
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(true);
-        configuration.addAllowedOrigin("http://www.woodaeng.kro.kr:8080"); // Replace with your allowed origin
-        configuration.addAllowedHeader("*");
-        configuration.addAllowedMethod("*");
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }
