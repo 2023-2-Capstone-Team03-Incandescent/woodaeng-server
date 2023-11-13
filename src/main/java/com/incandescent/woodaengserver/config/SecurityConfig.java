@@ -3,6 +3,7 @@ package com.incandescent.woodaengserver.config;
 import com.incandescent.woodaengserver.service.auth.AuthService;
 import com.incandescent.woodaengserver.service.auth.PrincipalOAuth2DetailsService;
 import com.incandescent.woodaengserver.service.auth.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity (debug = true)
@@ -47,6 +51,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors((cors) -> cors
+                        .configurationSource(corsConfigurationSource()))
                 .sessionManagement((sessionManagement) -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling((exceptionConfig) -> exceptionConfig
@@ -57,5 +63,21 @@ public class SecurityConfig {
                                 .userService(principalOAuth2DetailsService))
                         .successHandler(new OAuth2SuccessHandler(jwtTokenProvider,authService)));
         return http.build();
+    }
+
+
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowCredentials(true);
+        configuration.addAllowedOrigin("http://www.woodaeng.kro.kr:8080"); // Replace with your allowed origin
+        configuration.addAllowedHeader("*");
+        configuration.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
