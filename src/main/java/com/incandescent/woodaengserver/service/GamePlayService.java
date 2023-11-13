@@ -56,7 +56,7 @@ public class GamePlayService {
         container.stop();
     }
 
-    public void readyGame(String gameCode, Long id, int team) {
+    public void readyGame(String gameCode, String id, int team) {
         this.gameCode = gameCode;
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 

@@ -26,7 +26,7 @@ public class GameController {
 
     @MessageMapping("/game/ready/{gameCode}")
     public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) {
-        Long id = gameReadyRequest.getId();
+        String id = gameReadyRequest.getId();
         int team = gameReadyRequest.getTeam();
 
         gamePlayService.readyGame(gameCode, id, team);

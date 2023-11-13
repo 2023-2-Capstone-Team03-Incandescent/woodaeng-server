@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GamePlayRequest {
-    private Long id;
+    private String id;
     private int team;
     private int ballId;
 }
