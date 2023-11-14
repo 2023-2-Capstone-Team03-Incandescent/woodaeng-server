@@ -51,7 +51,7 @@ public class GameMatchingService {
             log.info("tryMatch");
             Set<String> locationQueue = setOperations.members("locationQueue:" + gameCode);
 
-            if (locationQueue.size() >= 6) {
+            if (locationQueue.size() >= 2) {
                 sendMatchInfo(locationQueue, gameCode);
                 setOperations.remove("locationQueue:" + gameCode, locationQueue.toArray());
                 cellIdCounterMap.remove(gameCode);
