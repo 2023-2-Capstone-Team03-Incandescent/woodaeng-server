@@ -74,8 +74,10 @@ public class GameMatchingService {
         List<String> playerList = new ArrayList<>(playerIds);
         Collections.shuffle(playerList);
 
-        List<String> teamP = playerList.subList(0, 3);
-        List<String> teamB = playerList.subList(3, 6);
+//        List<String> teamP = playerList.subList(0, 3);
+//        List<String> teamB = playerList.subList(3, 6);
+        List<String> teamP = playerList.subList(0,1);
+        List<String> teamB = playerList.subList(1,2);
 
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamP, teamB);
 
