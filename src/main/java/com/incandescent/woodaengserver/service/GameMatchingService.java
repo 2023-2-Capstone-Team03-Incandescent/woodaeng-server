@@ -42,15 +42,27 @@ public class GameMatchingService {
 
         setOperations.add("locationQueue:" + gameCode, playerId);
         tryMatch(gameCode);
+        notify();
     }
 
-    private void tryMatch(String gameCode) {
-        Set<String> locationQueue = setOperations.members("locationQueue:" + gameCode);
+    private synchronized void tryMatch(String gameCode) {
+        while (true) {
+            Set<String> locationQueue = setOperations.members("locationQueue:" + gameCode);
 
-        if (locationQueue.size() >= 6) {
-            sendMatchInfo(locationQueue, gameCode);
-            setOperations.remove("locationQueue:" + gameCode, locationQueue.toArray());
-            cellIdCounterMap.remove(gameCode);
+            if (locationQueue.size() >= 6) {
+                sendMatchInfo(locationQueue, gameCode);
+                setOperations.remove("locationQueue:" + gameCode, locationQueue.toArray());
+                cellIdCounterMap.remove(gameCode);
+                return;
+            }
+
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Interrupted while waiting for match");
+                return;  // 대기 중 인터럽트 발생 시 메서드 종료
+            }
         }
     }
 
