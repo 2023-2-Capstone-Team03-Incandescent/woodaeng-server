@@ -30,6 +30,7 @@ public class GameMatchingService {
     }
 
     public void joinLocationQueue(String playerId, double latitude, double longitude) {
+        log.info("joinLocationQueue");
         // S2 Cell ID 생성
         S2CellId cellId = S2CellId.fromLatLng(S2LatLng.fromDegrees(latitude, longitude));
         Long cellIdLong = cellId.id();
@@ -47,6 +48,7 @@ public class GameMatchingService {
 
     private synchronized void tryMatch(String gameCode) {
         while (true) {
+            log.info("tryMatch");
             Set<String> locationQueue = setOperations.members("locationQueue:" + gameCode);
 
             if (locationQueue.size() >= 6) {
@@ -57,6 +59,7 @@ public class GameMatchingService {
             }
 
             try {
+                log.info("wait");
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -67,6 +70,7 @@ public class GameMatchingService {
     }
 
     private void sendMatchInfo(Set<String> playerIds, String gameCode) {
+        log.info("sendMatchInfo");
         List<String> playerList = new ArrayList<>(playerIds);
         Collections.shuffle(playerList);
 
