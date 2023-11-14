@@ -56,6 +56,7 @@ public class SecurityConfig {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOriginPatterns(Arrays.asList("*"));
                     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+                    configuration.setAllowCredentials(true);
                     return configuration;
                 }))
                 .sessionManagement((sessionManagement) -> sessionManagement
