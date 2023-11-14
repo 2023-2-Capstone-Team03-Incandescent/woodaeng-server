@@ -42,8 +42,8 @@ public class GameMatchingService {
         String gameCode = cellIdLong + formattedIncrementValue;
 
         setOperations.add("locationQueue:" + gameCode, playerId);
-        tryMatch(gameCode);
         notify();
+        tryMatch(gameCode);
     }
 
     private synchronized void tryMatch(String gameCode) {
