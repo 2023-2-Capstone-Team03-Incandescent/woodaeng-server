@@ -86,7 +86,7 @@ public class GamePlayService {
             log.error(e.getMessage());
         }
 
-        messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, JsonEncoding.valueOf(gamePlayRequest.toString()));
+        messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, JsonEncoding.valueOf(jsonString));
         gamePublisher.publishGameEvent(gameCode, jsonString);
     }
 
