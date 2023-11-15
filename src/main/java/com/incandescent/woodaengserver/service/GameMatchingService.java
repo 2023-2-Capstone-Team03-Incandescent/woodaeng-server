@@ -1,5 +1,6 @@
 package com.incandescent.woodaengserver.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.geometry.S2CellId;
 import com.google.common.geometry.S2LatLng;
 import com.incandescent.woodaengserver.dto.game.PlayerMatchResponse;
@@ -9,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +30,61 @@ public class GameMatchingService {
         this.setOperations = redisTemplate.opsForSet();
         this.messagingTemplate = messagingTemplate;
     }
+
+//    @Transactional
+//    public void matchingJoin(String playerId, double latitude, double longitude)
+//            throws JsonProcessingException {
+//        //방 현재 인원 체크
+//        long matchingQuota = Long.parseLong(request.getMemberNumber());
+//        var matchingRoomCapacity = redisService.waitingUserCountAndRedisConnectByRedis(request.getKey());
+//        log.info("현재 방 입장 인원 =={}==",matchingRoomCapacity.toString());
+//
+//        //매칭 정원이 차지 않았을 경우
+//        if (matchingRoomCapacity < matchingQuota - 1) {
+//            redisService.machedEnterByRedis(request.getKey(), request);
+//            var topicNameSelector
+//                    = redisService.findByFirstJoinUserByRedis(request.getKey(), RequestMatching.class);
+//            String topicName = topicNameSelector.getMemberEmail();
+//            return new ResponseUrlInfo(request,topicName);
+//        }
+//
+//        //매칭 정원이 찻을 경우
+//        redisService.machedEnterByRedis(request.getKey(), request);
+//        var resultMemberList =
+//                redisService.getMatchingMemberByRedis(request.getKey(), matchingQuota, RequestMatching.class);
+//        var topicName = resultMemberList.get(0).getMemberEmail();
+//
+//        List<Member> members = resultMemberList.stream()
+//                .map(o -> memberService.responseMemberByMemberEmail(o.getMemberEmail())).toList();
+//
+//        String resultUrl = discordService.createChannel(resultMemberList.get(0).getGameMode(),
+//                Integer.parseInt(resultMemberList.get(0).getMemberNumber())).orElseThrow(() -> new IllegalArgumentException("url을 찾을 수 없습니다."));
+//
+//        var resultMatching = ResultMatching.builder()
+//                .gameInfo(resultMemberList.get(0).getKey())
+//                .playMode(resultMemberList.get(0).getGameMode())
+//                .discordUrl(resultUrl)
+//                .build();
+//        resultMatchingRepository.save(resultMatching);
+//
+//        members.stream()
+//                .map(resultMember -> {
+//                    MatchingLog matchingLog = new MatchingLog(resultMatching, resultMember);
+//                    matchingLog.addMatchingLogToMember(resultMember);
+//                    matchingLogRepository.save(matchingLog);
+//                    return matchingLog;
+//                });
+//
+//        var currentmatchingId = resultMatchingRepository.findFirstByDiscordUrl(resultUrl)
+//                .orElseThrow(NotFoundMatchingException::new);
+//
+//        return ResponseUrlInfo.builder()
+//                .matchingId(currentmatchingId.getId())
+//                .member(request)
+//                .topicName(topicName)
+//                .url(resultUrl).build();
+//    }
+
 
     public void joinLocationQueue(String playerId, double latitude, double longitude) {
         log.info("joinLocationQueue");

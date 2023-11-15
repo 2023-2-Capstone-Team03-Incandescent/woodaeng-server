@@ -1,5 +1,6 @@
 package com.incandescent.woodaengserver.service;
 
+import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
@@ -71,7 +72,7 @@ public class GamePlayService {
             log.error(e.getMessage());
         }
 
-        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, jsonGameReadyResponse);
+        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, JsonEncoding.valueOf(jsonGameReadyResponse));
 
         subscribeToRedis("/game/play/"+gameCode);
         startGame();
@@ -88,7 +89,6 @@ public class GamePlayService {
         messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, jsonString);
         gamePublisher.publishGameEvent(gameCode, jsonString);
     }
-
 
 
     @Scheduled(fixedDelay = 5000)
