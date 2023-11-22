@@ -133,8 +133,8 @@ public class GameMatchingService {
         List<String> playerList = new ArrayList<>(playerIds);
         Collections.shuffle(playerList);
 
-        List<String> teamRed = playerList.subList(0, 3);
-        List<String> teamBlue = playerList.subList(3, 6);
+        List<String> teamRed = playerList.subList(0, 1);
+        List<String> teamBlue = playerList.subList(1, 2);
 
         List<BallLocation> balls = new ArrayList<>();
 
