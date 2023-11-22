@@ -102,7 +102,7 @@ public class GameMatchingService {
             Set<String> locationQueue = setOperations.members("locationQueue:" + dongId);
             log.info("QUEUE SIZE: "+locationQueue.size());
 
-            if (locationQueue.size() >= 6) {
+            if (locationQueue.size() >= 2) {
                 AtomicLong counter = cellIdCounterMap.computeIfAbsent(String.valueOf(dongId), k -> new AtomicLong());
                 long incrementValue = counter.getAndIncrement();
 
