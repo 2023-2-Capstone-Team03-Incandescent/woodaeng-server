@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,23 +24,23 @@ public class GamePlayService {
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisMessageListenerContainer container;
     private final SimpMessagingTemplate messagingTemplate;
-    private final GamePublisher gamePublisher;
-    private final GameSubscriber gameSubscriber;
+    private final RedisPublisher redisPublisher;
+    private final RedisSubscriber redisSubscriber;
     private String gameCode;
     private boolean isContainerRunning = false;
 
     @Autowired
-    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, GamePublisher gamePublisher, GameSubscriber gameSubscriber) {
+    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber) {
         this.redisTemplate = redisTemplate;
         this.container = container;
         this.messagingTemplate = messagingTemplate;
-        this.gamePublisher = gamePublisher;
-        this.gameSubscriber = gameSubscriber;
+        this.redisPublisher = redisPublisher;
+        this.redisSubscriber = redisSubscriber;
     }
 
     public synchronized void subscribeToRedis(String topic) {
-        gameSubscriber.setTopic(topic);
-        container.addMessageListener(gameSubscriber, new PatternTopic(topic));
+        redisSubscriber.setTopic(topic);
+        container.addMessageListener(redisSubscriber, new PatternTopic(topic));
 
 //        if (!isContainerRunning) {
 //            gameSubscriber.setTopic(topic);
@@ -87,7 +86,7 @@ public class GamePlayService {
         }
 
         messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, jsonString);
-        gamePublisher.publishGameEvent(gameCode, jsonString);
+        redisPublisher.publishGameEvent(gameCode, jsonString);
     }
 
 

@@ -1,118 +1,120 @@
 package com.incandescent.woodaengserver.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.geometry.S2CellId;
-import com.google.common.geometry.S2LatLng;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.incandescent.woodaengserver.domain.Player;
+import com.incandescent.woodaengserver.dto.game.BallLocation;
 import com.incandescent.woodaengserver.dto.game.PlayerMatchResponse;
+import com.incandescent.woodaengserver.repository.GameRepository;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+
 @Slf4j
 @Service
 public class GameMatchingService {
+    @Value("${api.appKey}")
+    private String appKey;
+
     private final RedisTemplate<String, String> redisTemplate;
     private final SetOperations<String, String> setOperations;
     private final SimpMessagingTemplate messagingTemplate;
     private final Map<String, AtomicLong> cellIdCounterMap = new ConcurrentHashMap<>();
+    private final GameRepository gameRepository;
+    private List<Player> players;
 
     @Autowired
-    public GameMatchingService(RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate) {
+    public GameMatchingService(RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, GameRepository gameRepository) {
         this.redisTemplate = redisTemplate;
         this.setOperations = redisTemplate.opsForSet();
         this.messagingTemplate = messagingTemplate;
+        this.gameRepository = gameRepository;
     }
 
-//    @Transactional
-//    public void matchingJoin(String playerId, double latitude, double longitude)
-//            throws JsonProcessingException {
-//        //방 현재 인원 체크
-//        long matchingQuota = Long.parseLong(request.getMemberNumber());
-//        var matchingRoomCapacity = redisService.waitingUserCountAndRedisConnectByRedis(request.getKey());
-//        log.info("현재 방 입장 인원 =={}==",matchingRoomCapacity.toString());
-//
-//        //매칭 정원이 차지 않았을 경우
-//        if (matchingRoomCapacity < matchingQuota - 1) {
-//            redisService.machedEnterByRedis(request.getKey(), request);
-//            var topicNameSelector
-//                    = redisService.findByFirstJoinUserByRedis(request.getKey(), RequestMatching.class);
-//            String topicName = topicNameSelector.getMemberEmail();
-//            return new ResponseUrlInfo(request,topicName);
-//        }
-//
-//        //매칭 정원이 찻을 경우
-//        redisService.machedEnterByRedis(request.getKey(), request);
-//        var resultMemberList =
-//                redisService.getMatchingMemberByRedis(request.getKey(), matchingQuota, RequestMatching.class);
-//        var topicName = resultMemberList.get(0).getMemberEmail();
-//
-//        List<Member> members = resultMemberList.stream()
-//                .map(o -> memberService.responseMemberByMemberEmail(o.getMemberEmail())).toList();
-//
-//        String resultUrl = discordService.createChannel(resultMemberList.get(0).getGameMode(),
-//                Integer.parseInt(resultMemberList.get(0).getMemberNumber())).orElseThrow(() -> new IllegalArgumentException("url을 찾을 수 없습니다."));
-//
-//        var resultMatching = ResultMatching.builder()
-//                .gameInfo(resultMemberList.get(0).getKey())
-//                .playMode(resultMemberList.get(0).getGameMode())
-//                .discordUrl(resultUrl)
-//                .build();
-//        resultMatchingRepository.save(resultMatching);
-//
-//        members.stream()
-//                .map(resultMember -> {
-//                    MatchingLog matchingLog = new MatchingLog(resultMatching, resultMember);
-//                    matchingLog.addMatchingLogToMember(resultMember);
-//                    matchingLogRepository.save(matchingLog);
-//                    return matchingLog;
-//                });
-//
-//        var currentmatchingId = resultMatchingRepository.findFirstByDiscordUrl(resultUrl)
-//                .orElseThrow(NotFoundMatchingException::new);
-//
-//        return ResponseUrlInfo.builder()
-//                .matchingId(currentmatchingId.getId())
-//                .member(request)
-//                .topicName(topicName)
-//                .url(resultUrl).build();
-//    }
-
-
-    public void joinLocationQueue(String playerId, double latitude, double longitude) {
+    public synchronized void joinLocationQueue(String playerId, double latitude, double longitude) throws IOException {
         log.info("joinLocationQueue");
-        // S2 Cell ID 생성
-        S2CellId cellId = S2CellId.fromLatLng(S2LatLng.fromDegrees(latitude, longitude));
-        Long cellIdLong = cellId.id();
 
-        AtomicLong counter = cellIdCounterMap.computeIfAbsent(String.valueOf(cellIdLong), k -> new AtomicLong());
-        long incrementValue = counter.getAndIncrement();
+        String gameCode;
 
-        String formattedIncrementValue = String.format("%02d", incrementValue);
-        String gameCode = cellIdLong + formattedIncrementValue;
+        URL locationUrl = new URL("https://apis.openapi.sk.com/tmap/geofencing/regions?version=1&count=20&categories=adminDong&searchType=COORDINATES&reqCoordType=WGS84GEO&reqLon="+longitude+"&reqLat="+latitude);
+        HttpURLConnection conn = (HttpURLConnection) locationUrl.openConnection();
+        conn.setRequestMethod("GET");
 
-        setOperations.add("locationQueue:" + gameCode, playerId);
-        notify();
-        tryMatch(gameCode);
+        conn.setRequestProperty("appKey", appKey);
+        conn.setDoOutput(true);
+
+        String jsonString = "";
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            jsonString = response.toString();
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonString);
+            JsonNode arrayNode = jsonNode.get("searchRegionsInfo");
+            JsonNode searchRegionsInfoJson = arrayNode.get(0);
+            JsonNode regionInfoJson = searchRegionsInfoJson.get("regionInfo");
+            String dongId = String.valueOf(regionInfoJson.get("regionId").asInt());
+
+         setOperations.add("locationQueue:" + dongId, playerId);
+            notifyAll();
+            gameCode = tryMatch(dongId);
+        } catch (ParseException e) {
+            log.info(String.valueOf(e.getErrorType()));
+        }
+
+
+//        players.add(new Player(playerId, latitude, longitude, team, gameCode));
     }
 
-    private synchronized void tryMatch(String gameCode) {
+    private synchronized String tryMatch(String dongId) throws IOException, ParseException {
         while (true) {
             log.info("tryMatch");
-            Set<String> locationQueue = setOperations.members("locationQueue:" + gameCode);
+            Set<String> locationQueue = setOperations.members("locationQueue:" + dongId);
+            log.info("QUEUE SIZE: "+locationQueue.size());
 
-            if (locationQueue.size() >= 2) {
+            if (locationQueue.size() >= 6) {
+                AtomicLong counter = cellIdCounterMap.computeIfAbsent(String.valueOf(dongId), k -> new AtomicLong());
+                long incrementValue = counter.getAndIncrement();
+
+                String formattedIncrementValue = String.format("%02d", incrementValue);
+                String gameCode = dongId + formattedIncrementValue;
+
+
+
                 sendMatchInfo(locationQueue, gameCode);
-                setOperations.remove("locationQueue:" + gameCode, locationQueue.toArray());
-                cellIdCounterMap.remove(gameCode);
-                return;
+                setOperations.remove("locationQueue:" + dongId, locationQueue.toArray());
+                cellIdCounterMap.remove(dongId);
+                return gameCode;
             }
 
             try {
@@ -121,25 +123,153 @@ public class GameMatchingService {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.error("Interrupted while waiting for match");
-                return;  // 대기 중 인터럽트 발생 시 메서드 종료
+                return "INTERRRR";  // 대기 중 인터럽트 발생 시 메서드 종료
             }
         }
     }
 
-    private void sendMatchInfo(Set<String> playerIds, String gameCode) {
+    private void sendMatchInfo(Set<String> playerIds, String gameCode) throws IOException {
         log.info("sendMatchInfo");
         List<String> playerList = new ArrayList<>(playerIds);
         Collections.shuffle(playerList);
 
-//        List<String> teamP = playerList.subList(0, 3);
-//        List<String> teamB = playerList.subList(3, 6);
-        List<String> teamP = playerList.subList(0,1);
-        List<String> teamB = playerList.subList(1,2);
+        List<String> teamRed = playerList.subList(0, 3);
+        List<String> teamBlue = playerList.subList(3, 6);
 
-        PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamP, teamB);
+        List<BallLocation> balls = new ArrayList<>();
+
+
+
+
+        URL locationUrl = new URL("https://apis.openapi.sk.com/tmap/geofencing/regions/"+gameCode.substring(0, gameCode.length()-2)+"?version=1");
+        HttpURLConnection conn = (HttpURLConnection) locationUrl.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("appKey", appKey);
+        conn.setDoOutput(true);
+
+        String jsonString = "";
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            jsonString = response.toString();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(jsonString);
+        JsonNode arrayNode = jsonNode.get("features");
+        JsonNode featuresJson = arrayNode.get(0);
+        JsonNode geometryJson = featuresJson.get("geometry");
+        ArrayNode coordinatesJson = (ArrayNode) geometryJson.get("coordinates");
+        JsonNode coordinatesList = coordinatesJson.get(0);
+
+        List<List<Double>> coorRes = new ArrayList<>();
+        for (JsonNode coordinate : coordinatesList) {
+            if (coordinate.isArray() && coordinate.size() >= 2) {
+                double longitude = coordinate.get(0).asDouble();
+                double latitude = coordinate.get(1).asDouble();
+                coorRes.add(Arrays.asList(longitude, latitude));
+            }
+        }
+
+
+
+
+        URL routeUrl = new URL("https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1");
+
+
+
+
+        while(balls.size() < 20) {
+            HttpURLConnection conn2 = (HttpURLConnection) routeUrl.openConnection();
+            conn2.setRequestMethod("POST");
+            conn2.setRequestProperty("appKey", appKey);
+            conn2.setRequestProperty("Content-Type", "application/json");
+            conn2.setDoOutput(true);
+
+            int startNum = (int) (Math.random() * coordinatesList.size());
+            int endNum = (int) (Math.random() * coordinatesList.size());
+            while (startNum == endNum)
+                endNum = (int) (Math.random() * coordinatesList.size());
+
+
+
+
+            ObjectNode requestBodyJson = (ObjectNode) objectMapper.readTree("{}");
+
+            requestBodyJson.put("startX", coordinatesList.get(startNum).get(0).toString());
+            requestBodyJson.put("startY", coordinatesList.get(startNum).get(1).toString());
+            requestBodyJson.put("endX", coordinatesList.get(endNum).get(0).toString());
+            requestBodyJson.put("endY", coordinatesList.get(endNum).get(1).toString());
+            requestBodyJson.put("startName", "start");
+            requestBodyJson.put("endName", "end");
+
+            String requestBody = requestBodyJson.toString();
+
+            try (OutputStream os = conn2.getOutputStream()) {
+                byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            } catch (IOException e) {
+                log.error("Error writing to the connection: " + e.getMessage());
+                e.printStackTrace();  // Log the full stack trace for debugging.
+            }
+            jsonString = "";
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn2.getInputStream()))) {
+                StringBuilder response = new StringBuilder();
+                String line;
+
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+
+                jsonString = response.toString();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            } finally {
+                conn2.disconnect();
+            }
+
+
+
+            JsonNode jsonNode1 = new ObjectMapper().readTree(jsonString);
+            ArrayNode arrayNode1 = (ArrayNode) jsonNode1.get("features");
+            JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
+            JsonNode geometryJson2 = featureJson.get("geometry");
+
+            JsonNode coordinatesLists = geometryJson2.get("coordinates");
+
+            List<List<Double>> coordinatesList5 = new ArrayList<>();
+            for (JsonNode coordinate : coordinatesLists) {
+                if (coordinate.isArray() && coordinate.size() >= 2) {
+                    double longitude = coordinate.get(0).asDouble();
+                    double latitude = coordinate.get(1).asDouble();
+                    coordinatesList5.add(Arrays.asList(longitude, latitude));
+                }
+            }
+
+
+            if((featureJson.get("properties")).get("facilityType").equals("11")) {
+                int i = (int) (Math.random() * coordinatesLists.size());
+                balls.add(new BallLocation(coordinatesList5.get(i).get(1), coordinatesList5.get(i).get(0)));
+            }
+        }
+
+        PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
+
+
+
+//        gameRepository.insertGame(gameCode, balls, players);
 
         // 각 팀에게 팀 정보 및 게임 코드 전송
         messagingTemplate.convertAndSend("/game/matching", playerMatchResponse);
         log.info("matching");
+        log.info(playerMatchResponse.toString());
     }
 }

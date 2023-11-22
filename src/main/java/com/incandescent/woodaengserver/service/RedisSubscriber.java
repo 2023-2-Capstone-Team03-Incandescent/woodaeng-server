@@ -7,20 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.PatternTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 @Slf4j
 @Service
-public class GameSubscriber implements MessageListener {
+public class RedisSubscriber implements MessageListener {
     private final SimpMessagingTemplate messagingTemplate;
     private String topic;
 
     @Autowired
-    public GameSubscriber(SimpMessagingTemplate messagingTemplate) {
+    public RedisSubscriber(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 

@@ -7,10 +7,13 @@ import com.incandescent.woodaengserver.service.GameMatchingService;
 import com.incandescent.woodaengserver.service.GamePlayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.parser.ParseException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
+
+import java.io.IOException;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,7 +23,7 @@ public class GameController {
     private final GamePlayService gamePlayService;
 
     @MessageMapping("/game/matching")
-    public void matching(@Payload PlayerMatchRequest playerMatchRequest) {
+    public void matching(@Payload PlayerMatchRequest playerMatchRequest) throws IOException, ParseException {
         gameMatchingService.joinLocationQueue(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude());
     }
 
