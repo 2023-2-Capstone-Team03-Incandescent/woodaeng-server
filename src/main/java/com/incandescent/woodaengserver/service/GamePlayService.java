@@ -71,7 +71,8 @@ public class GamePlayService {
             log.error(e.getMessage());
         }
 
-        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, JsonEncoding.valueOf(gameReadyResponse.toString()));
+//        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, JsonEncoding.valueOf(gameReadyResponse.toString()));
+        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, gameReadyResponse.toString());
 
         subscribeToRedis("/game/play/"+gameCode);
         startGame();
