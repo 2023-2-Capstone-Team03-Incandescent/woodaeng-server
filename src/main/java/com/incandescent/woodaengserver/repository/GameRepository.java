@@ -68,5 +68,6 @@ public class GameRepository {
         Object[] selectRedScoreParams = new Object[]{game_code};
 
         this.jdbcTemplate.update(selectRedScoreQuery, selectRedScoreParams);
+        return 0;
     }
 }
