@@ -56,7 +56,7 @@ public class GamePlayService {
         container.stop();
     }
 
-    public void readyGame(String gameCode, String id, int team) {
+    public void readyGame(String gameCode, String id, int team) throws JsonProcessingException {
         this.gameCode = gameCode;
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 
@@ -64,15 +64,8 @@ public class GamePlayService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
-        String jsonGameReadyResponse = null;
-        try {
-            jsonGameReadyResponse = objectMapper.writeValueAsString(gameReadyResponse);
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
-        }
-
-//        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, JsonEncoding.valueOf(gameReadyResponse.toString()));
-        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, gameReadyResponse.toString());
+        String jsonGameReadyResponse = objectMapper.writeValueAsString(gameReadyResponse);
+        messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, jsonGameReadyResponse);
 
         subscribeToRedis("/game/play/"+gameCode);
         startGame();

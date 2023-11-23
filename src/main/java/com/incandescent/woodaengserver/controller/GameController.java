@@ -1,5 +1,6 @@
 package com.incandescent.woodaengserver.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
 import com.incandescent.woodaengserver.dto.game.GameReadyRequest;
 import com.incandescent.woodaengserver.dto.game.PlayerMatchRequest;
@@ -28,7 +29,7 @@ public class GameController {
     }
 
     @MessageMapping("/game/ready/{gameCode}")
-    public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) {
+    public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) throws JsonProcessingException {
         String id = gameReadyRequest.getId();
         int team = gameReadyRequest.getTeam();
 
