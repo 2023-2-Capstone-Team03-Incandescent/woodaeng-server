@@ -41,6 +41,7 @@ public class GameMatchingService {
     private final Map<String, AtomicLong> cellIdCounterMap = new ConcurrentHashMap<>();
     private final GameRepository gameRepository;
     private List<Player> players;
+    private int ballIndex = 0;
 
     @Autowired
     public GameMatchingService(RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, GameRepository gameRepository) {
@@ -230,6 +231,7 @@ public class GameMatchingService {
                 }
 
                 jsonString = response.toString();
+                log.info("보행자경로 response");
             } catch (IOException e) {
                 log.error(e.getMessage());
             } finally {
@@ -240,25 +242,34 @@ public class GameMatchingService {
 
             JsonNode jsonNode1 = new ObjectMapper().readTree(jsonString);
             ArrayNode arrayNode1 = (ArrayNode) jsonNode1.get("features");
-            JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
-            JsonNode geometryJson2 = featureJson.get("geometry");
 
-            JsonNode coordinatesLists = geometryJson2.get("coordinates");
 
-            List<List<Double>> coordinatesList5 = new ArrayList<>();
-            for (JsonNode coordinate : coordinatesLists) {
-                if (coordinate.isArray() && coordinate.size() >= 2) {
-                    double longitude = coordinate.get(0).asDouble();
-                    double latitude = coordinate.get(1).asDouble();
-                    coordinatesList5.add(Arrays.asList(longitude, latitude));
-                }
+//            while(balls.size() < 3) {
+            for (int i = 0; i < 4; i++) {
+                JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
+                JsonNode geometryJson2 = featureJson.get("geometry");
+
+//                if((featureJson.get("properties")).get("facilityType").equals("11")) {
+                    JsonNode coordinatesLists = geometryJson2.get("coordinates");
+
+                    List<List<Double>> coordinatesList5 = new ArrayList<>();
+                    for (JsonNode coordinate : coordinatesLists) {
+                        if (coordinate.isArray() && coordinate.size() >= 2) {
+                            double longitude = coordinate.get(0).asDouble();
+                            double latitude = coordinate.get(1).asDouble();
+                            coordinatesList5.add(Arrays.asList(longitude, latitude));
+                        }
+                    }
+                    log.info(coordinatesList5.toString());
+
+                    int num = (int) (Math.random() * coordinatesLists.size());
+                    BallLocation balladd = new BallLocation(ballIndex++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
+                    balls.add(balladd);
+                    log.info("ball add!!!!!!!!!!!!!!!!!!");
+                    log.info(balladd.toString());
+//                }
             }
 
-
-            if((featureJson.get("properties")).get("facilityType").equals("11")) {
-                int i = (int) (Math.random() * coordinatesLists.size());
-                balls.add(new BallLocation(coordinatesList5.get(i).get(1), coordinatesList5.get(i).get(0)));
-            }
         }
 
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
