@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameReadyRequest {
-    private String id;
+    private Long id;
     private int team;
 }

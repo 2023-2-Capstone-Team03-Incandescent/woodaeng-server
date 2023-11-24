@@ -35,7 +35,7 @@ public class GameController {
 
     @MessageMapping("/game/ready/{gameCode}")
     public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) throws JsonProcessingException {
-        String id = gameReadyRequest.getId();
+        Long id = gameReadyRequest.getId();
         int team = gameReadyRequest.getTeam();
 
         gamePlayService.readyGame(gameCode, id, team);

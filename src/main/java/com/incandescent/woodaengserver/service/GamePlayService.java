@@ -1,6 +1,5 @@
 package com.incandescent.woodaengserver.service;
 
-import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
@@ -29,6 +28,7 @@ public class GamePlayService {
     private final RedisSubscriber redisSubscriber;
     private String gameCode;
     private boolean isContainerRunning = false;
+    private String startTime;
 
     @Autowired
     public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber) {
@@ -48,10 +48,11 @@ public class GamePlayService {
         container.stop();
     }
 
-    public void readyGame(String gameCode, String id, int team) throws JsonProcessingException {
+    public void readyGame(String gameCode, Long id, int team) throws JsonProcessingException {
         this.gameCode = gameCode;
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 
+        this.startTime = startTime.getSecond() + " " +  startTime.getMinute() + " " +  startTime.getHour() + " " +  startTime.getDayOfMonth() + " " +  startTime.getMonth() + " " +  startTime.getDayOfWeek();
 
         ObjectMapper objectMapper = new ObjectMapper();
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
@@ -59,7 +60,7 @@ public class GamePlayService {
         messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, jsonGameReadyResponse);
 
         subscribeToRedis("/game/play/"+gameCode);
-        startGame();
+//        startGame();
     }
 
     public void playGame(String gameCode, GamePlayRequest gamePlayRequest) throws JsonProcessingException {
@@ -97,10 +98,12 @@ public class GamePlayService {
     }
 
 
-    @Scheduled(fixedDelay = 5000)
-    public void startGame() {
-        endGame();
-    }
+//    @Scheduled(d) //랜덤박스
+
+//    @Scheduled(cron = "10 10 ", zone =  "")
+//    public void startGame() {
+//        endGame();
+//    }
 
     @Async
     @Scheduled(fixedDelay  = 900000) // 15분(900,000밀리초)
