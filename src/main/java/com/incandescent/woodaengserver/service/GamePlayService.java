@@ -29,6 +29,7 @@ public class GamePlayService {
     private String gameCode;
     private boolean isContainerRunning = false;
     private String startTime;
+    private String endTime;
 
     @Autowired
     public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber) {
@@ -51,8 +52,10 @@ public class GamePlayService {
     public void readyGame(String gameCode, Long id, int team) throws JsonProcessingException {
         this.gameCode = gameCode;
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
+        LocalDateTime endTime = startTime.plusMinutes(15);
 
         this.startTime = startTime.getSecond() + " " +  startTime.getMinute() + " " +  startTime.getHour() + " " +  startTime.getDayOfMonth() + " " +  startTime.getMonth() + " " +  startTime.getDayOfWeek();
+        this.endTime = endTime.getSecond() + " " +  endTime.getMinute() + " " +  endTime.getHour() + " " +  endTime.getDayOfMonth() + " " +  endTime.getMonth() + " " +  endTime.getDayOfWeek();
 
         ObjectMapper objectMapper = new ObjectMapper();
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
@@ -60,7 +63,7 @@ public class GamePlayService {
         messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, jsonGameReadyResponse);
 
         subscribeToRedis("/game/play/"+gameCode);
-//        startGame();
+        startGame();
     }
 
     public void playGame(String gameCode, GamePlayRequest gamePlayRequest) throws JsonProcessingException {
@@ -100,13 +103,13 @@ public class GamePlayService {
 
 //    @Scheduled(d) //랜덤박스
 
-//    @Scheduled(cron = "10 10 ", zone =  "")
-//    public void startGame() {
-//        endGame();
-//    }
+    @Scheduled(cron = "#{@startTime}", zone =  "Asia/Seoul")
+    public void startGame() {
+        endGame();
+    }
 
     @Async
-    @Scheduled(fixedDelay  = 900000) // 15분(900,000밀리초)
+    @Scheduled(cron = "#{@endTime}", zone =  "Asia/Seoul")
     public void endGame() {
         unsubscribeFromRedis();
         GameResultResponse gameResultResponse = new GameResultResponse();
