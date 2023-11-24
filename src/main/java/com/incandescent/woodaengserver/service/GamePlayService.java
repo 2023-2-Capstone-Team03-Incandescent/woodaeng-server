@@ -28,6 +28,7 @@ public class GamePlayService {
     private final RedisSubscriber redisSubscriber;
     private String gameCode;
     private boolean isContainerRunning = false;
+
     private String startTime;
     private String endTime;
 
@@ -63,7 +64,7 @@ public class GamePlayService {
         messagingTemplate.convertAndSend("/topic/game/ready/"+gameCode, jsonGameReadyResponse);
 
         subscribeToRedis("/game/play/"+gameCode);
-        startGame();
+//        startGame();
     }
 
     public void playGame(String gameCode, GamePlayRequest gamePlayRequest) throws JsonProcessingException {
@@ -103,22 +104,22 @@ public class GamePlayService {
 
 //    @Scheduled(d) //랜덤박스
 
-    @Scheduled(cron = "#{@startTime}", zone =  "Asia/Seoul")
-    public void startGame() {
-        endGame();
-    }
-
-    @Async
-    @Scheduled(cron = "#{@endTime}", zone =  "Asia/Seoul")
-    public void endGame() {
-        unsubscribeFromRedis();
-        GameResultResponse gameResultResponse = new GameResultResponse();
-        String jsonGameResultResponse = null;
-        try {
-            jsonGameResultResponse = new ObjectMapper().writeValueAsString(gameResultResponse);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        messagingTemplate.convertAndSend("/topic/game/end/"+gameCode, jsonGameResultResponse);
-    }
+//    @Scheduled(cron = "#{@startTime}", zone =  "Asia/Seoul")
+//    public void startGame() {
+//        endGame();
+//    }
+//
+//    @Async
+//    @Scheduled(cron = endTime., zone =  "Asia/Seoul")
+//    public void endGame() {
+//        unsubscribeFromRedis();
+//        GameResultResponse gameResultResponse = new GameResultResponse();
+//        String jsonGameResultResponse = null;
+//        try {
+//            jsonGameResultResponse = new ObjectMapper().writeValueAsString(gameResultResponse);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//        messagingTemplate.convertAndSend("/topic/game/end/"+gameCode, jsonGameResultResponse);
+//    }
 }
