@@ -61,6 +61,7 @@ public class GameMatchingService {
 
         String gameCode = null;
 
+
         URL locationUrl = new URL("https://apis.openapi.sk.com/tmap/geofencing/regions?version=1&count=20&categories=adminDong&searchType=COORDINATES&reqCoordType=WGS84GEO&reqLon="+longitude+"&reqLat="+latitude);
         HttpURLConnection conn = (HttpURLConnection) locationUrl.openConnection();
         conn.setRequestMethod("GET");
@@ -91,18 +92,14 @@ public class GameMatchingService {
             JsonNode regionInfoJson = searchRegionsInfoJson.get("regionInfo");
             String dongId = String.valueOf(regionInfoJson.get("regionId").asInt());
 
+
+            log.info("insert!!!!");
+            gameRepository.insertPlayer(playerId, latitude, longitude);
+
             setOperations.add("locationQueue:" + dongId, String.valueOf(playerId));
             notifyAll();
             gameCode = tryMatch(dongId);
 
-            log.info("player add!!!!!!!");
-            players.add(new Player(playerId, latitude, longitude, teamRed.contains(playerId) ? 0 : 1, gameCode));
-            log.info(players.toString());
-
-            synchronized (this) {
-                log.info("insert!!!!");
-                gameRepository.insertGame(gameCode, balls, players);
-            }
         } catch (Exception e) {
             log.info(String.valueOf(e.getMessage()));
             e.printStackTrace();
@@ -193,11 +190,7 @@ public class GameMatchingService {
         }
 
 
-
-
         URL routeUrl = new URL("https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1");
-
-
 
 
         while(balls.size() < 20) {
@@ -211,8 +204,6 @@ public class GameMatchingService {
             int endNum = (int) (Math.random() * coordinatesList.size());
             while (startNum == endNum)
                 endNum = (int) (Math.random() * coordinatesList.size());
-
-
 
 
             ObjectNode requestBodyJson = (ObjectNode) objectMapper.readTree("{}");
@@ -283,9 +274,11 @@ public class GameMatchingService {
             }
 
         }
-
+        gameRepository.insertBalls(gameCode, balls);
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
 
+        gameRepository.updatePlayer(gameCode, teamRed, teamBlue);
+        log.info("update player");
         // 각 팀에게 팀 정보 및 게임 코드 전송
         messagingTemplate.convertAndSend("/game/matching", playerMatchResponse);
         log.info("matching");

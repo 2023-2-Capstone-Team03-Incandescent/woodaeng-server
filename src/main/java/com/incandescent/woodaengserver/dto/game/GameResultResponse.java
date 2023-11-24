@@ -6,10 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class GameResultResponse {
-    @JsonProperty("team")
-    int team;
+    private int team;
+    private int teamRScore;
+    private int teamBScore;
+    private List<GamePlayerResult> playerResults;
 }

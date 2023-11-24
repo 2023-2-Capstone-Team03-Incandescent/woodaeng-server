@@ -14,7 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Game {
-    @EmbeddedId
     private String game_code;
     private int red_score;
 }

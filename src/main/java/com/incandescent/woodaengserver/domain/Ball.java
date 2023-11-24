@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Ball {
-    @EmbeddedId
     private int ballId;
     private double latitude;
     private double longitude;
