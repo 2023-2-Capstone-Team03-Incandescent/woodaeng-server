@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BallLocation {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ballId;
     private Double latitude;
     private Double longitude;

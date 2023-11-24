@@ -12,6 +12,7 @@ import com.incandescent.woodaengserver.service.GamePlayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.parser.ParseException;
+import org.quartz.SchedulerException;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -34,7 +35,7 @@ public class GameController {
     }
 
     @MessageMapping("/game/ready/{gameCode}")
-    public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) throws JsonProcessingException {
+    public void ready(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) throws JsonProcessingException, SchedulerException {
         Long id = gameReadyRequest.getId();
         int team = gameReadyRequest.getTeam();
 
