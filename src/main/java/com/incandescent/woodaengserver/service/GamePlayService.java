@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
+import com.incandescent.woodaengserver.dto.game.GamePlayResponse;
 import com.incandescent.woodaengserver.dto.game.GameReadyResponse;
 import com.incandescent.woodaengserver.dto.game.GameResultResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -41,15 +42,6 @@ public class GamePlayService {
     public synchronized void subscribeToRedis(String topic) {
         redisSubscriber.setTopic(topic);
         container.addMessageListener(redisSubscriber, new PatternTopic(topic));
-
-//        if (!isContainerRunning) {
-//            gameSubscriber.setTopic(topic);
-//            container.addMessageListener(new MessageListenerAdapter(gameSubscriber, "onMessage"), new PatternTopic(topic));
-////            container.setConnectionFactory(redisTemplate.getConnectionFactory());
-//            container.afterPropertiesSet();
-//            container.start();
-//            isContainerRunning = true;
-//        }
     }
 
     public synchronized void unsubscribeFromRedis() {
@@ -61,7 +53,6 @@ public class GamePlayService {
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 
 
-
         ObjectMapper objectMapper = new ObjectMapper();
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
         String jsonGameReadyResponse = objectMapper.writeValueAsString(gameReadyResponse);
@@ -71,16 +62,38 @@ public class GamePlayService {
         startGame();
     }
 
-    public void playGame(String gameCode, GamePlayRequest gamePlayRequest) {
-        String jsonString = null;
-        try {
-            jsonString = new ObjectMapper().writeValueAsString(gamePlayRequest);
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+    public void playGame(String gameCode, GamePlayRequest gamePlayRequest) throws JsonProcessingException {
+        GamePlayResponse gamePlayResponse = null;
+        if (gamePlayRequest.getBallId() == 20) {
+            int ball1 = (int) (Math.random() * 20);
+            int ball2 = (int) (Math.random() * 20);
+            while (ball1 == ball2)
+                ball2 = (int) (Math.random() * 20);
+            gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball1, ball2, 10, 10, 1);
+
+        } else if (gamePlayRequest.getBallId() == 21) {
+            int random = (int) (Math.random() * 3);
+            switch (random) {
+                case 0: //2개+
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), gamePlayRequest.getBallId(), 30, 10, 10, 1);
+                    break;
+                case 1: //2개-
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), gamePlayRequest.getBallId(), 30, 10, 10, 2);
+                    break;
+                case 2: //안개
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 30, 30, 10, 10, 3);
+                    break;
+            }
+
+
+        } else {
+            gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), gamePlayRequest.getBallId(), 30, 10, 10, 0);
         }
 
-        messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, jsonString);
-        redisPublisher.publishGameEvent(gameCode, jsonString);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonGamePlayResponse = objectMapper.writeValueAsString(gamePlayResponse);
+        messagingTemplate.convertAndSend("/topic/game/play/"+gameCode, jsonGamePlayResponse);
+        redisPublisher.publishGameEvent(gameCode, jsonGamePlayResponse);
     }
 
 

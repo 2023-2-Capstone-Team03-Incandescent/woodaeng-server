@@ -2,6 +2,7 @@ package com.incandescent.woodaengserver.repository;
 
 import com.incandescent.woodaengserver.domain.Player;
 import com.incandescent.woodaengserver.dto.game.BallLocation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
 import java.util.List;
 
+@Slf4j
 @Repository
 public class GameRepository {
     private final JdbcTemplate jdbcTemplate;
@@ -34,7 +36,8 @@ public class GameRepository {
             this.jdbcTemplate.update(insertGameQuery, insertGameParams);
         }
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 2; i++) {
+            log.info(players.get(i).toString());
             insertGameQuery = "insert into player (user_id, latitude, longitude, team, game_code, ball_cnt, gold_cnt, box_cnt, mini_cnt) values (?,?,?,?,?,0,0,0,0)";
             insertGameParams = new Object[]{players.get(i).getUser_id(), players.get(i).getLatitude(), players.get(i).getLongitude(), players.get(i).getTeam(), game_code};
 

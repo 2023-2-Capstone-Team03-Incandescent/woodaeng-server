@@ -24,4 +24,12 @@ public class Player {
     private int gold_cnt;
     private int box_cnt;
     private int mini_cnt;
+
+    public Player(Long playerId, double latitude, double longitude, int team, String gameCode) {
+        this.user_id = playerId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.team = team;
+        this.game_code = gameCode;
+    }
 }

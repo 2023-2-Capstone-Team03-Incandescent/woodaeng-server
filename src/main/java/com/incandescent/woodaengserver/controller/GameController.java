@@ -1,9 +1,12 @@
 package com.incandescent.woodaengserver.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.incandescent.woodaengserver.domain.Player;
+import com.incandescent.woodaengserver.dto.game.BallLocation;
 import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
 import com.incandescent.woodaengserver.dto.game.GameReadyRequest;
 import com.incandescent.woodaengserver.dto.game.PlayerMatchRequest;
+import com.incandescent.woodaengserver.repository.GameRepository;
 import com.incandescent.woodaengserver.service.GameMatchingService;
 import com.incandescent.woodaengserver.service.GamePlayService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,8 +28,9 @@ public class GameController {
     private final GamePlayService gamePlayService;
 
     @MessageMapping("/game/matching")
-    public void matching(@Payload PlayerMatchRequest playerMatchRequest) throws IOException, ParseException {
+    public void matching(@Payload PlayerMatchRequest playerMatchRequest) throws IOException {
         gameMatchingService.joinLocationQueue(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude());
+
     }
 
     @MessageMapping("/game/ready/{gameCode}")
@@ -37,7 +42,7 @@ public class GameController {
     }
 
     @MessageMapping("/game/play/{gameCode}")
-    public void play(@DestinationVariable String gameCode, @Payload GamePlayRequest gamePlayRequest) {
+    public void play(@DestinationVariable String gameCode, @Payload GamePlayRequest gamePlayRequest) throws JsonProcessingException {
         gamePlayService.playGame(gameCode, gamePlayRequest);
     }
 }

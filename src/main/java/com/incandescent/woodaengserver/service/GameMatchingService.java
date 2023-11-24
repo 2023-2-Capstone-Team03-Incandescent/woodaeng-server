@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -40,8 +41,12 @@ public class GameMatchingService {
     private final SimpMessagingTemplate messagingTemplate;
     private final Map<String, AtomicLong> cellIdCounterMap = new ConcurrentHashMap<>();
     private final GameRepository gameRepository;
-    private List<Player> players;
+    private List<Player> players = new ArrayList<>();
     private int ballIndex = 0;
+    private int team = 0;
+    private List<Long> teamRed;
+    private List<Long> teamBlue;
+    private List<BallLocation> balls = new ArrayList<>();
 
     @Autowired
     public GameMatchingService(RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, GameRepository gameRepository) {
@@ -51,10 +56,10 @@ public class GameMatchingService {
         this.gameRepository = gameRepository;
     }
 
-    public synchronized void joinLocationQueue(String playerId, double latitude, double longitude) throws IOException {
+    public synchronized void joinLocationQueue(Long playerId, double latitude, double longitude) throws IOException {
         log.info("joinLocationQueue");
 
-        String gameCode;
+        String gameCode = null;
 
         URL locationUrl = new URL("https://apis.openapi.sk.com/tmap/geofencing/regions?version=1&count=20&categories=adminDong&searchType=COORDINATES&reqCoordType=WGS84GEO&reqLon="+longitude+"&reqLat="+latitude);
         HttpURLConnection conn = (HttpURLConnection) locationUrl.openConnection();
@@ -75,7 +80,7 @@ public class GameMatchingService {
 
             jsonString = response.toString();
         } catch (Exception e) {
-            log.info(e.getMessage());
+            e.printStackTrace();
         }
 
         try {
@@ -86,15 +91,22 @@ public class GameMatchingService {
             JsonNode regionInfoJson = searchRegionsInfoJson.get("regionInfo");
             String dongId = String.valueOf(regionInfoJson.get("regionId").asInt());
 
-         setOperations.add("locationQueue:" + dongId, playerId);
+            setOperations.add("locationQueue:" + dongId, String.valueOf(playerId));
             notifyAll();
             gameCode = tryMatch(dongId);
-        } catch (ParseException e) {
-            log.info(String.valueOf(e.getErrorType()));
+
+            log.info("player add!!!!!!!");
+            players.add(new Player(playerId, latitude, longitude, teamRed.contains(playerId) ? 0 : 1, gameCode));
+            log.info(players.toString());
+
+            synchronized (this) {
+                log.info("insert!!!!");
+                gameRepository.insertGame(gameCode, balls, players);
+            }
+        } catch (Exception e) {
+            log.info(String.valueOf(e.getMessage()));
+            e.printStackTrace();
         }
-
-
-//        players.add(new Player(playerId, latitude, longitude, team, gameCode));
     }
 
     private synchronized String tryMatch(String dongId) throws IOException, ParseException {
@@ -131,14 +143,14 @@ public class GameMatchingService {
 
     private void sendMatchInfo(Set<String> playerIds, String gameCode) throws IOException {
         log.info("sendMatchInfo");
-        List<String> playerList = new ArrayList<>(playerIds);
+        List<Long> playerList = playerIds.stream()
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
         Collections.shuffle(playerList);
 
-        List<String> teamRed = playerList.subList(0, 1);
-        List<String> teamBlue = playerList.subList(1, 2);
-
-        List<BallLocation> balls = new ArrayList<>();
-
+        teamRed = playerList.subList(0, 1);
+        teamBlue = playerList.subList(1, 2);
 
 
 
@@ -219,7 +231,7 @@ public class GameMatchingService {
                 os.write(input, 0, input.length);
             } catch (IOException e) {
                 log.error("Error writing to the connection: " + e.getMessage());
-                e.printStackTrace();  // Log the full stack trace for debugging.
+                e.printStackTrace();
             }
             jsonString = "";
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn2.getInputStream()))) {
@@ -273,10 +285,6 @@ public class GameMatchingService {
         }
 
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
-
-
-
-//        gameRepository.insertGame(gameCode, balls, players);
 
         // 각 팀에게 팀 정보 및 게임 코드 전송
         messagingTemplate.convertAndSend("/game/matching", playerMatchResponse);

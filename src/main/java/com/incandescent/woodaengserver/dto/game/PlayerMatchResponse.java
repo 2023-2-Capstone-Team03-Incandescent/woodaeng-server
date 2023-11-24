@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PlayerMatchResponse {
     private String gameCode;
-    private List<String> teamRed;
-    private List<String> teamBlue;
+    private List<Long> teamRed;
+    private List<Long> teamBlue;
     private List<BallLocation> balls;
 }

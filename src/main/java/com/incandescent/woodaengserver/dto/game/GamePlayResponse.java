@@ -7,8 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PlayerMatchRequest {
+public class GamePlayResponse {
     private Long id;
-    private double latitude;
-    private double longitude;
+    private int team;
+    private int ballId1;
+    private int ballId2;
+    private int teamRScore;
+    private int teamBScore;
+    private int random;
 }
