@@ -183,9 +183,10 @@ public class GameMatchingService {
         List<List<Double>> coorRes = new ArrayList<>();
         for (JsonNode coordinate : coordinatesList) {
             if (coordinate.isArray() && coordinate.size() >= 2) {
-                double longitude = coordinate.get(1).asDouble();
-                double latitude = coordinate.get(0).asDouble();
+                double latitude = coordinate.get(1).asDouble();
+                double longitude = coordinate.get(0).asDouble();
                 coorRes.add(Arrays.asList(longitude, latitude));
+                log.info("189!!!!!!!!" + latitude);
             }
         }
 
@@ -258,8 +259,9 @@ public class GameMatchingService {
                     List<List<Double>> coordinatesList5 = new ArrayList<>();
                     for (JsonNode coordinate : coordinatesLists) {
                         if (coordinate.isArray() && coordinate.size() >= 2) {
-                            double latitude = coordinate.get(0).asDouble();
-                            double longitude = coordinate.get(1).asDouble();
+                            double latitude = coordinate.get(1).asDouble();
+                            double longitude = coordinate.get(0).asDouble();
+                            log.info("264!!!"+latitude);
                             coordinatesList5.add(Arrays.asList(latitude, longitude));
                         }
                     }
@@ -268,6 +270,7 @@ public class GameMatchingService {
                     int num = (int) (Math.random() * coordinatesLists.size());
                     double lat = coordinatesList5.get(num).get(0);
                     double lon = coordinatesList5.get(num).get(1);
+                log.info("273!!!!!!!!" + lat);
                     boolean contain = false;
                     for (int j = 0; j < balls.size(); j++) {
                         if (lat == balls.get(j).getLatitude() && lon == balls.get(j).getLongitude()) {
