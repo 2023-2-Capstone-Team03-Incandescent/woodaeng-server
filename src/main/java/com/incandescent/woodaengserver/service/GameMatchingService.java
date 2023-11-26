@@ -192,7 +192,7 @@ public class GameMatchingService {
 
         URL routeUrl = new URL("https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1");
 
-        int i = 1;
+
         while(balls.size() < 20) {
             HttpURLConnection conn2 = (HttpURLConnection) routeUrl.openConnection();
             conn2.setRequestMethod("POST");
@@ -247,8 +247,8 @@ public class GameMatchingService {
             ArrayNode arrayNode1 = (ArrayNode) jsonNode1.get("features");
 
 
-
-            while(balls.size() < i * 5) {
+            int i = 0;
+            while(i < 2) {
                 JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
                 JsonNode geometryJson2 = featureJson.get("geometry");
 
@@ -280,10 +280,10 @@ public class GameMatchingService {
                         balls.add(balladd);
                         log.info("ball add!!!!!!!!!!!!!!!!!!");
                         log.info(balladd.toString());
+                        i++;
                     }
 //                }
             }
-            i++;
         }
         gameRepository.insertBalls(gameCode, balls);
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
