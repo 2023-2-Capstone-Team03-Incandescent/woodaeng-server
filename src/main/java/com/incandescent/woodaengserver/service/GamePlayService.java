@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -66,9 +67,8 @@ public class GamePlayService {
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
         LocalDateTime endTime = startTime.plusSeconds(150); // 150초
 
-        ObjectMapper objectMapper = new ObjectMapper();
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
-        String jsonGameReadyResponse = objectMapper.writeValueAsString(gameReadyResponse);
+        String jsonGameReadyResponse = new ObjectMapper().writeValueAsString(gameReadyResponse);
         messagingTemplate.convertAndSend("/topic/game/ready/" + gameCode, jsonGameReadyResponse);
 
         subscribeToRedis("/game/play/" + gameCode);
@@ -112,51 +112,50 @@ public class GamePlayService {
 
     public void playGame(String gameCode, GamePlayRequest gamePlayRequest) throws JsonProcessingException {
         GamePlayResponse gamePlayResponse = null;
-        if (gamePlayRequest.getBallId() >= 30) {
+        if (gamePlayRequest.getBallId() >= 30) { // 랜덤박스
             int color = 0;
             int redScore = gameRepository.selectRedScore(gameCode);
             log.info(String.valueOf(redScore));
 
-            int random = (int) (Math.random() * 3);
+            int random = (int) (Math.random() * 3) + 2;
             switch (random) {
-                case 0: //2개+
+                case 2: //1개+
                     List<Integer> balls = gameRepository.selectOurBall(gameCode, gamePlayRequest.getTeam() == 0 ? 1 : 0);
-                    int ball1 = balls.get((int) (Math.random() * balls.size()));
-                    int ball2 = balls.get((int) (Math.random() * balls.size()));
-                    while (ball1 == ball2)
-                        ball2 = balls.get((int) (Math.random() * balls.size()));
+                    int ball = balls.get((int) (Math.random() * balls.size()));
 
                     if (gameRepository.selectTeam(gamePlayRequest.getId()) == 1) {
                         color = 1;
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball1, color, --redScore);
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball2, color, --redScore);
+                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, --redScore);
                     } else {
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball1, color, ++redScore);
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball2, color, ++redScore);
+                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, ++redScore);
                     }
-                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball1, ball2, redScore, 20-redScore, 1);
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
                     break;
-                case 1: //2개-
+                case 3: //1개-
                     balls = gameRepository.selectOurBall(gameCode, gamePlayRequest.getTeam());
-                    ball1 = balls.get((int) (Math.random() * balls.size()));
-                    ball2 = balls.get((int) (Math.random() * balls.size()));
-                    while (ball1 == ball2)
-                        ball2 = balls.get((int) (Math.random() * balls.size()));
+                    ball = balls.get((int) (Math.random() * balls.size()));
 
                     if (gameRepository.selectTeam(gamePlayRequest.getId()) == 0) {
                         color = 1;
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball1, color, --redScore);
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball2, color, --redScore);
+                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, --redScore);
                     } else {
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball1, color, ++redScore);
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball2, color, ++redScore);
+                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, ++redScore);
                     }
-                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball1, ball2, redScore, 20-redScore, 2);
-                case 2: //안개
-                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, 3);
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
+                    break;
+                case 4: //안개
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
+                    break;
+                case 5: // 포인트
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
+                    // 포인트 추가 로직
+                    break;
+                case 6: // 꽝
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
+
             };
             gameRepository.updateRBNum(gamePlayRequest.getId());
-        } else if (gamePlayRequest.getBallId() >= 20) {
+        } else if (gamePlayRequest.getBallId() >= 20) { // 황금원판
             List<Integer> balls = gameRepository.selectOurBall(gameCode, gamePlayRequest.getTeam() == 0 ? 1 : 0);
             int ball1 = balls.get((int) (Math.random() * balls.size()));
             int ball2 = balls.get((int) (Math.random() * balls.size()));
@@ -178,9 +177,7 @@ public class GamePlayService {
             gameRepository.updateGoldNum(gamePlayRequest.getId());
 
             gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball1, ball2, redScore, 20-redScore, 1);
-        } else {
-            gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), gamePlayRequest.getBallId(), 40, 10, 10, 0);
-
+        } else { //일반원판
             int color = 0;
             int redScore = gameRepository.selectRedScore(gameCode);
             log.info(String.valueOf(redScore));
@@ -190,6 +187,7 @@ public class GamePlayService {
             } else {
                 redScore++;
             }
+            gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), gamePlayRequest.getBallId(), 40, redScore, 20-redScore, 0);
             gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), gamePlayRequest.getBallId(), color, redScore);
         }
 
@@ -201,21 +199,50 @@ public class GamePlayService {
 //        redisPublisher.publishGameEvent(gameCode, jsonGamePlayResponse);
     }
 
+    public void realTimeLocation(String gameCode, GameReadyRequest gameReadyRequest) throws JsonProcessingException {
+        // 다른 사용자와 만나면 전송. 실시간 위치 처리 로직
+
+
+        Long opponentId = 0L; // 상대방
+
+        int gameType = (int) Math.round(Math.random());
+        String question = null;
+        HashMap<Integer, String> options = null;
+        int answer = 0;
+
+        switch (gameType) {
+            case 0: //댕댕퀴즈
+                question = "문제";
+                options = new HashMap<>() {{
+                    put(1, "답안1");
+                    put(2, "답안2");
+                    put(3, "답안3");
+                }};
+                answer = 0; //정답
+                break;
+            case 1: //댕기자랑
+                question = "명렁어";
+                break;
+        }
+
+        GameMiniResponse gameMiniResponse = new GameMiniResponse(gameReadyRequest.getId(), gameType, opponentId, question, options, answer);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
+        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
+    }
+
     public static class endJob implements Job {
         public endJob() {}
 
+        @SneakyThrows
         @Override
         public void execute(JobExecutionContext context) {
             unsubscribeFromRedis();
 
             String gameCode = context.getJobDetail().getJobDataMap().getString("gameCode");
             GameResultResponse gameResultResponse = gameRepository.selectResult(gameCode);
-            String jsonGameResultResponse = null;
-            try {
-                jsonGameResultResponse = new ObjectMapper().writeValueAsString(gameResultResponse);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            String jsonGameResultResponse = new ObjectMapper().writeValueAsString(gameResultResponse);
+
             messagingTemplate.convertAndSend("/topic/game/end/" + gameCode, jsonGameResultResponse);
             log.info("end JOB!!!!!!");
         }
@@ -343,12 +370,14 @@ public class GamePlayService {
                 case 0: //황금원판
                     ball = new BallLocation(goldNum++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
                     log.info(String.valueOf(ball));
-                    messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, ball);
+                    String jsonBall = new ObjectMapper().writeValueAsString(ball);
+                    messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, jsonBall);
                     break;
                 case 1:
                     ball = new BallLocation(randNum++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
                     log.info(String.valueOf(ball));
-                    messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, ball);
+                    jsonBall = new ObjectMapper().writeValueAsString(ball);
+                    messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, jsonBall);
                     break;
             }
             log.info("RandomJob!!!!!!");

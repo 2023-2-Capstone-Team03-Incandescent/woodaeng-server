@@ -46,4 +46,9 @@ public class GameController {
     public void play(@DestinationVariable String gameCode, @Payload GamePlayRequest gamePlayRequest) throws JsonProcessingException {
         gamePlayService.playGame(gameCode, gamePlayRequest);
     }
+
+    @MessageMapping("/game/location/{gameCode}")
+    public void location(@DestinationVariable String gameCode, @Payload GameReadyRequest gameReadyRequest) throws JsonProcessingException {
+        gamePlayService.realTimeLocation(gameCode, gameReadyRequest);
+    }
 }
