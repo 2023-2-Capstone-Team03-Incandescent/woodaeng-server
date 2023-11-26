@@ -218,7 +218,7 @@ public class GamePlayService {
 //        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
 //        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
 //    }
-
+//
 //    public List<Object> getQuiz(Long id) {
 //
 //        List<Object> quiz = new ArrayList<>();

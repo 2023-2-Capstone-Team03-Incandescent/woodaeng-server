@@ -258,9 +258,9 @@ public class GameMatchingService {
                     List<List<Double>> coordinatesList5 = new ArrayList<>();
                     for (JsonNode coordinate : coordinatesLists) {
                         if (coordinate.isArray() && coordinate.size() >= 2) {
-                            double longitude = coordinate.get(1).asDouble();
                             double latitude = coordinate.get(0).asDouble();
-                            coordinatesList5.add(Arrays.asList(longitude, latitude));
+                            double longitude = coordinate.get(1).asDouble();
+                            coordinatesList5.add(Arrays.asList(latitude, longitude));
                         }
                     }
                     log.info(coordinatesList5.toString());

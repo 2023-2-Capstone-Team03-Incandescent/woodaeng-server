@@ -161,8 +161,11 @@ public class GameRepository {
 //        //이름 나이 견종 성별
 //        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where user_id = ?";
 //        Object[] selectDogParams = new Object[]{id};
-//
-//        List<Object> returnList = this.jdbcTemplate.query(selectDogQuery, new Object[], selectDogParams);
+//        List<Object> returnList = this.jdbcTemplate.query(selectDogQuery, (rs, count) -> new Object [](
+//                rs.getString("dog_name"),
+//                rs.getInt("dog_age"),
+//                rs.getString("dog_breed"),
+//                rs.getInt("dog_sex")), selectDogParams);
 //
 //
 ////        List<Object> returnList = new ArrayList<>();
