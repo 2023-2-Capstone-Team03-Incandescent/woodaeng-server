@@ -280,7 +280,7 @@ public class GameMatchingService {
         gameRepository.updatePlayer(gameCode, teamRed, teamBlue);
         log.info("update player");
         // 각 팀에게 팀 정보 및 게임 코드 전송
-        messagingTemplate.convertAndSend("/game/matching", jsonPlayMatchResponse);
+        messagingTemplate.convertAndSend("topic/game/matching", jsonPlayMatchResponse);
         log.info("matching");
         log.info(playerMatchResponse.toString());
     }
