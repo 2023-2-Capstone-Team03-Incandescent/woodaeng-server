@@ -119,36 +119,26 @@ public class GamePlayService {
 
             int random = (int) (Math.random() * 3) + 2;
             switch (random) {
-                case 2: //1개+
-                    List<Integer> balls = gameRepository.selectOurBall(gameCode, gamePlayRequest.getTeam() == 0 ? 1 : 0);
-                    int ball = balls.get((int) (Math.random() * balls.size()));
-
-                    if (gameRepository.selectTeam(gamePlayRequest.getId()) == 1) {
-                        color = 1;
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, --redScore);
-                    } else {
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, ++redScore);
-                    }
-                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
-                    break;
-                case 3: //1개-
-                    balls = gameRepository.selectOurBall(gameCode, gamePlayRequest.getTeam());
-                    ball = balls.get((int) (Math.random() * balls.size()));
-
-                    if (gameRepository.selectTeam(gamePlayRequest.getId()) == 0) {
-                        color = 1;
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, --redScore);
-                    } else {
-                        gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, color, ++redScore);
-                    }
-                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
-                    break;
-                case 4: //안개
+                case 2: //안개
                     gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
                     break;
-                case 5: // 포인트
+                case 3: //blue+
+                    List<Integer> redBalls = gameRepository.selectOurBall(gameCode, 0);
+                    int ball = redBalls.get((int) (Math.random() * redBalls.size()));
+                    gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, 1, --redScore);
+
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
+                    break;
+                case 4: // 포인트
                     gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
                     // 포인트 추가 로직
+                    break;
+                case 5: //red+
+                    List<Integer> blueBalls = gameRepository.selectOurBall(gameCode, 1);
+                    ball = blueBalls.get((int) (Math.random() * blueBalls.size()));
+                    gameRepository.updateBallColor(gameCode, gamePlayRequest.getId(), ball, 0, ++redScore);
+
+                    gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), ball, 40, redScore, 20-redScore, random);
                     break;
                 case 6: // 꽝
                     gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
