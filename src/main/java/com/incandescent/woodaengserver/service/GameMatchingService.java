@@ -123,7 +123,7 @@ public class GameMatchingService {
 
                 sendMatchInfo(locationQueue, gameCode);
                 setOperations.remove("locationQueue:" + dongId, locationQueue.toArray());
-                cellIdCounterMap.remove(dongId);
+//                cellIdCounterMap.remove(dongId);
                 return gameCode;
             }
 
@@ -276,11 +276,11 @@ public class GameMatchingService {
         }
         gameRepository.insertBalls(gameCode, balls);
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
-
+        String jsonPlayMatchResponse = new ObjectMapper().writeValueAsString(playerMatchResponse);
         gameRepository.updatePlayer(gameCode, teamRed, teamBlue);
         log.info("update player");
         // 각 팀에게 팀 정보 및 게임 코드 전송
-        messagingTemplate.convertAndSend("/game/matching", playerMatchResponse);
+        messagingTemplate.convertAndSend("/game/matching", jsonPlayMatchResponse);
         log.info("matching");
         log.info(playerMatchResponse.toString());
     }
