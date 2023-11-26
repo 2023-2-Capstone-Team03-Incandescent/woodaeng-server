@@ -192,7 +192,7 @@ public class GameMatchingService {
 
         URL routeUrl = new URL("https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1");
 
-
+        int i = 1;
         while(balls.size() < 20) {
             HttpURLConnection conn2 = (HttpURLConnection) routeUrl.openConnection();
             conn2.setRequestMethod("POST");
@@ -247,8 +247,8 @@ public class GameMatchingService {
             ArrayNode arrayNode1 = (ArrayNode) jsonNode1.get("features");
 
 
-//            while(balls.size() < 3) {
-            for (int i = 0; i < 4; i++) {
+
+            while(balls.size() < i * 5) {
                 JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
                 JsonNode geometryJson2 = featureJson.get("geometry");
 
@@ -266,13 +266,24 @@ public class GameMatchingService {
                     log.info(coordinatesList5.toString());
 
                     int num = (int) (Math.random() * coordinatesLists.size());
-                    BallLocation balladd = new BallLocation(ballIndex++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
-                    balls.add(balladd);
-                    log.info("ball add!!!!!!!!!!!!!!!!!!");
-                    log.info(balladd.toString());
+                    double lat = coordinatesList5.get(num).get(0);
+                    double lon = coordinatesList5.get(num).get(1);
+                    boolean contain = false;
+                    for (int j = 0; j < balls.size(); j++) {
+                        if (lat == balls.get(j).getLatitude() && lon == balls.get(j).getLongitude()) {
+                                contain = true;
+                                break;
+                            }
+                    }
+                    if (!contain) {
+                        BallLocation balladd = new BallLocation(ballIndex++, lat, lon);
+                        balls.add(balladd);
+                        log.info("ball add!!!!!!!!!!!!!!!!!!");
+                        log.info(balladd.toString());
+                    }
 //                }
             }
-
+            i++;
         }
         gameRepository.insertBalls(gameCode, balls);
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
