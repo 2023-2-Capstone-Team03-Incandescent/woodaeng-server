@@ -183,8 +183,8 @@ public class GameMatchingService {
         List<List<Double>> coorRes = new ArrayList<>();
         for (JsonNode coordinate : coordinatesList) {
             if (coordinate.isArray() && coordinate.size() >= 2) {
-                double longitude = coordinate.get(0).asDouble();
-                double latitude = coordinate.get(1).asDouble();
+                double longitude = coordinate.get(1).asDouble();
+                double latitude = coordinate.get(0).asDouble();
                 coorRes.add(Arrays.asList(longitude, latitude));
             }
         }
@@ -258,8 +258,8 @@ public class GameMatchingService {
                     List<List<Double>> coordinatesList5 = new ArrayList<>();
                     for (JsonNode coordinate : coordinatesLists) {
                         if (coordinate.isArray() && coordinate.size() >= 2) {
-                            double longitude = coordinate.get(0).asDouble();
-                            double latitude = coordinate.get(1).asDouble();
+                            double longitude = coordinate.get(1).asDouble();
+                            double latitude = coordinate.get(0).asDouble();
                             coordinatesList5.add(Arrays.asList(longitude, latitude));
                         }
                     }
