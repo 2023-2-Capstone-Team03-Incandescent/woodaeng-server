@@ -33,7 +33,7 @@ public class UserRepository {
     }
 
     public User selectByEmail(String email) {
-        String selectByEmailQuery = "select id, email, nickname, password, introduce, role, provider, provider_id from user where email = ? and status = 1";
+        String selectByEmailQuery = "select id, email, nickname, password, role, provider, provider_id from user where email = ? and status = 1";
         Object[] selectByEmailParams = new Object[]{email};
         try {
             return this.jdbcTemplate.queryForObject(selectByEmailQuery,
@@ -42,7 +42,6 @@ public class UserRepository {
                             rs.getString("email"),
                             rs.getString("nickname"),
                             rs.getString("password"),
-                            rs.getString("introduce"),
                             rs.getString("role"),
                             rs.getString("provider"),
                             rs.getString("provider_id")),

@@ -26,7 +26,7 @@ public class UserController {
         User user;
         try {
             user = userProvider.retrieveById(id);
-            UserProfileResponse userProfileResponse = new UserProfileResponse(user.getNickname(), user.getIntroduce());
+            UserProfileResponse userProfileResponse = new UserProfileResponse(user.getNickname());
             return ResponseEntity.status(HttpStatus.OK).body(userProfileResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

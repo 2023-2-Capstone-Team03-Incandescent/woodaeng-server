@@ -13,7 +13,10 @@ public class User {
     private String email;
     private String nickname;
     private String password;
-    private String introduce;
+    private String dog_name;
+    private int dog_age;
+    private String dog_breed;
+    private int dog_sex;
     private String role;
     private String provider;
     private String provider_id;

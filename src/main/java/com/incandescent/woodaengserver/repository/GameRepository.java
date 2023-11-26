@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -155,4 +156,20 @@ public class GameRepository {
 
         return new GameResultResponse(team, redS, blueS, sqlList);
     }
+
+//    public List<Object> selectDog(Long id) {
+//        //이름 나이 견종 성별
+//        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where user_id = ?";
+//        Object[] selectDogParams = new Object[]{id};
+//
+//        List<Object> returnList = this.jdbcTemplate.query(selectDogQuery, new Object[], selectDogParams);
+//
+//
+////        List<Object> returnList = new ArrayList<>();
+////        returnList.add();
+////        returnList.add();
+////        returnList.add();
+////        returnList.add();
+//        return
+//    }
 }

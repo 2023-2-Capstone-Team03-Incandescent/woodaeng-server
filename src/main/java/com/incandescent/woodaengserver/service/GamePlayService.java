@@ -189,37 +189,119 @@ public class GamePlayService {
 //        redisPublisher.publishGameEvent(gameCode, jsonGamePlayResponse);
     }
 
-    public void realTimeLocation(String gameCode, GameReadyRequest gameReadyRequest) throws JsonProcessingException {
-        // 다른 사용자와 만나면 전송. 실시간 위치 처리 로직
+//    public void realTimeLocation(String gameCode, GameReadyRequest gameReadyRequest) throws JsonProcessingException {
+//        // 다른 사용자와 만나면 전송. 실시간 위치 처리 로직
+//
+//
+//        Long opponentId = 0L; // 상대방
+//
+//        int gameType = (int) Math.round(Math.random());
+//        String question = null;
+//        HashMap<Integer, String> options = null;
+//        int answer = 0;
+//
+//        switch (gameType) {
+//            case 0: //댕댕퀴즈
+//                List<Object> quiz = getQuiz(상대id);
+//                question = (String) quiz.get(0);
+//                options = (HashMap<Integer, String>) quiz.get(1);
+//                answer = (int) quiz.get(2);
+//                break;
+//            case 1: //댕기자랑
+//                String[] commands = {"앉아", "엎드려", "손"};
+//                question = commands[(int) (Math.random() * commands.length)];
+//                break;
+//        }
+//
+//        GameMiniResponse gameMiniResponse = new GameMiniResponse(gameReadyRequest.getId(), gameType, opponentId, question, options, answer);
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
+//        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
+//    }
 
-
-        Long opponentId = 0L; // 상대방
-
-        int gameType = (int) Math.round(Math.random());
-        String question = null;
-        HashMap<Integer, String> options = null;
-        int answer = 0;
-
-        switch (gameType) {
-            case 0: //댕댕퀴즈
-                question = "문제";
-                options = new HashMap<>() {{
-                    put(1, "답안1");
-                    put(2, "답안2");
-                    put(3, "답안3");
-                }};
-                answer = 0; //정답
-                break;
-            case 1: //댕기자랑
-                question = "명렁어";
-                break;
-        }
-
-        GameMiniResponse gameMiniResponse = new GameMiniResponse(gameReadyRequest.getId(), gameType, opponentId, question, options, answer);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
-        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
-    }
+//    public List<Object> getQuiz(Long id) {
+//
+//        List<Object> quiz = new ArrayList<>();
+//        int questionType = (int) (Math.random() * 3);
+//
+//        String question = null;
+//        HashMap<Integer, String> options = new HashMap<>();
+//        int answer = 0;
+//
+//        List<Object> dog = gameRepository.selectDog(id);
+//
+//        switch (questionType) {
+//            case 0: //나이
+//                question = dog.get(0) + "의 나이는 몇 살일까요?";
+//                int age = (int) dog.get(1);
+//                answer = (int) (Math.random() * 4) + 1;
+//
+//                options.put(answer, age+"살"); //정답
+//
+//                int value = age;
+//                int num = answer;
+//                while (num > 0) {
+//                    options.put(--num, --value+"살");
+//                }
+//                num = answer;
+//                value = age;
+//                while (num < 5) {
+//                    options.put(++num, ++value+"살");
+//                }
+//                break;
+//            case 1: //견종
+//                question = dog.get(0) + "는 무슨 종일까요?";
+//                String breed = (String) dog.get(2);
+//                answer = (int) (Math.random() * 4) + 1;
+//
+//                List<String> breedList = new ArrayList<>();
+//                breedList.add("말티스");
+//                breedList.add("푸들");
+//                breedList.add("스피츠");
+//                breedList.add("치와와");
+//                breedList.add("포메라니안");
+//                breedList.add("토이푸들");
+//                breedList.add("시츄");
+//                breedList.add("비숑 프리제");
+//                breedList.add("웰시코기");
+//                breedList.add("사모예드");
+//
+//                options.put(answer, breed); //정답
+//
+//                List<Integer> ops = new ArrayList<>();
+//                ops.add(breedList.indexOf(breed));
+//                while (ops.size() < 5) {
+//                    int index = (int) (Math.random() * breedList.size());
+//                    if (!ops.contains(index))
+//                        ops.add(index);
+//                }
+//                ops.remove(breedList.indexOf(breed));
+//                num = answer;
+//                int i = 0;
+//                while (num > 0) {
+//                    options.put(--num, breedList.get(i++));
+//                }
+//                num = answer;
+//                while (num < 5) {
+//                    options.put(++num, breedList.get(i++));
+//                }
+//                break;
+//            case 2: //성별
+//                question = dog.get(0) + "의 성별은 무엇일까요?";
+//                int sex = (int) dog.get(3);
+//                options.put(1, "남자");
+//                options.put(2, "여자");
+//                answer = sex + 1;
+//                break;
+//        }
+//
+//
+//        quiz.add(question);
+//        quiz.add(options);
+//        quiz.add(answer);
+//
+//        return quiz;
+//    }
 
     public static class endJob implements Job {
         public endJob() {}
@@ -281,8 +363,8 @@ public class GamePlayService {
             List<List<Double>> coorRes = new ArrayList<>();
             for (JsonNode coordinate : coordinatesList) {
                 if (coordinate.isArray() && coordinate.size() >= 2) {
-                    double longitude = coordinate.get(0).asDouble();
-                    double latitude = coordinate.get(1).asDouble();
+                    double longitude = coordinate.get(1).asDouble();
+                    double latitude = coordinate.get(0).asDouble();
                     coorRes.add(Arrays.asList(longitude, latitude));
                 }
             }
@@ -346,8 +428,8 @@ public class GamePlayService {
             List<List<Double>> coordinatesList5 = new ArrayList<>();
             for (JsonNode coordinate : coordinatesLists) {
                 if (coordinate.isArray() && coordinate.size() >= 2) {
-                    double longitude = coordinate.get(0).asDouble();
-                    double latitude = coordinate.get(1).asDouble();
+                    double longitude = coordinate.get(1).asDouble();
+                    double latitude = coordinate.get(0).asDouble();
                     coordinatesList5.add(Arrays.asList(longitude, latitude));
                 }
             }
@@ -358,13 +440,13 @@ public class GamePlayService {
 
             switch (goldRan) {
                 case 0: //황금원판
-                    ball = new BallLocation(goldNum++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
+                    ball = new BallLocation(goldNum++, coordinatesList5.get(num).get(0), coordinatesList5.get(num).get(1));
                     log.info(String.valueOf(ball));
                     String jsonBall = new ObjectMapper().writeValueAsString(ball);
                     messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, jsonBall);
                     break;
-                case 1:
-                    ball = new BallLocation(randNum++, coordinatesList5.get(num).get(1), coordinatesList5.get(num).get(0));
+                case 1: //랜덤박스
+                    ball = new BallLocation(randNum++, coordinatesList5.get(num).get(0), coordinatesList5.get(num).get(1));
                     log.info(String.valueOf(ball));
                     jsonBall = new ObjectMapper().writeValueAsString(ball);
                     messagingTemplate.convertAndSend("/topic/game/random/" + gameCode, jsonBall);
