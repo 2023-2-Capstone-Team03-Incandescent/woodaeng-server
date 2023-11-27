@@ -196,7 +196,7 @@ public class GamePlayService {
         GeoOperations<String, String> ops = redisTemplate.opsForGeo();
         GeoResults<RedisGeoCommands.GeoLocation<String>> result = ops.radius(
                 "NearPlayer",
-                new Circle(new Point(latitude, longitude), new Distance(3, Metrics.METERS)),
+                new Circle(new Point(longitude, latitude), new Distance(3, Metrics.METERS)),
                 RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs().includeDistance());
         List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = result.getContent();
 
@@ -210,9 +210,9 @@ public class GamePlayService {
                 .forEach(obj->{
                     Long id = Long.valueOf(obj.getContent().getName());
                     int playerTeam = gameRepository.selectTeam(id);
-                    double retLatitude = obj.getContent().getPoint().getX();
-                    double retLongitude = obj.getContent().getPoint().getY();
-                    rs.add(new PlayerLocation(id, playerTeam, new Point(retLatitude, retLongitude)));
+                    double retLatitude = obj.getContent().getPoint().getY();
+                    double retLongitude = obj.getContent().getPoint().getX();
+                    rs.add(new PlayerLocation(id, playerTeam, new Point(retLongitude, retLatitude)));
                 });
 
         return rs;
@@ -222,7 +222,7 @@ public class GamePlayService {
     public void realTimeLocation(String gameCode, PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
         GeoOperations<String, String> ops = redisTemplate.opsForGeo();
         ops.remove("NearPlayer", String.valueOf(playerMatchRequest.getId()));
-        ops.add("NearPlayer", new Point(playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude()), String.valueOf(playerMatchRequest.getId()));
+        ops.add("NearPlayer", new Point(playerMatchRequest.getLongitude(), playerMatchRequest.getLatitude()), String.valueOf(playerMatchRequest.getId()));
 
         List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
 
