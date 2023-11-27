@@ -192,7 +192,7 @@ public class GamePlayService {
 //        redisPublisher.publishGameEvent(gameCode, jsonGamePlayResponse);
     }
 
-    public List<PlayerLocation> findNearByLocation(double latitude, double longitude, int team) {
+    public List<PlayerLocation> findNearByLocation(Long playerId, double latitude, double longitude, int team) {
         GeoOperations<String, String> ops = redisTemplate.opsForGeo();
         GeoResults<RedisGeoCommands.GeoLocation<String>> result = ops.radius(
                 "NearPlayer",
@@ -205,7 +205,7 @@ public class GamePlayService {
                 .filter(obj -> {
                     Long id = Long.valueOf(obj.getContent().getName());
                     int playerTeam = gameRepository.selectTeam(id);
-                    return playerTeam != team;
+                    return playerTeam != team && id != playerId;
                 })
                 .forEach(obj->{
                     Long id = Long.valueOf(obj.getContent().getName());
@@ -220,7 +220,11 @@ public class GamePlayService {
 
 
     public void realTimeLocation(String gameCode, PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
-        List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
+        GeoOperations<String, String> ops = redisTemplate.opsForGeo();
+        ops.remove("NearPlayer", String.valueOf(playerMatchRequest.getId()));
+        ops.add("NearPlayer", new Point(playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude()), String.valueOf(playerMatchRequest.getId()));
+
+        List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
 
         if (nearPlayerList.isEmpty())
             return;
