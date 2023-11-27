@@ -222,6 +222,8 @@ public class GamePlayService {
     public void realTimeLocation(String gameCode, PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
         List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
 
+        if (nearPlayerList.isEmpty())
+            return;
         Long opponentId = nearPlayerList.get(0).getId();
 
         int gameType = (int) Math.round(Math.random());
