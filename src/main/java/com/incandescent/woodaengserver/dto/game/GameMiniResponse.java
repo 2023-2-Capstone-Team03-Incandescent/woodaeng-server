@@ -10,6 +10,7 @@ import java.util.HashMap;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameMiniResponse {
+    private String startTime;
     private Long id;
     private int gameType;
     private Long opponentId;

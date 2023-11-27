@@ -1,16 +1,19 @@
 package com.incandescent.woodaengserver.repository;
 
-import com.incandescent.woodaengserver.domain.Player;
+import com.incandescent.woodaengserver.dto.DogInfo;
 import com.incandescent.woodaengserver.dto.game.BallLocation;
 import com.incandescent.woodaengserver.dto.game.GamePlayerResult;
 import com.incandescent.woodaengserver.dto.game.GameResultResponse;
+import com.incandescent.woodaengserver.dto.game.PlayerLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -157,22 +160,14 @@ public class GameRepository {
         return new GameResultResponse(team, redS, blueS, sqlList);
     }
 
-//    public List<Object> selectDog(Long id) {
-//        //이름 나이 견종 성별
-//        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where user_id = ?";
-//        Object[] selectDogParams = new Object[]{id};
-//        List<Object> returnList = this.jdbcTemplate.query(selectDogQuery, (rs, count) -> new Object [](
-//                rs.getString("dog_name"),
-//                rs.getInt("dog_age"),
-//                rs.getString("dog_breed"),
-//                rs.getInt("dog_sex")), selectDogParams);
-//
-//
-////        List<Object> returnList = new ArrayList<>();
-////        returnList.add();
-////        returnList.add();
-////        returnList.add();
-////        returnList.add();
-//        return
-//    }
+    public DogInfo selectDog(Long id) {
+        //이름 나이 견종 성별
+        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where user_id = ?";
+        Object[] selectDogParams = new Object[]{id};
+        return this.jdbcTemplate.queryForObject(selectDogQuery, (rs, count) -> new DogInfo(
+                rs.getString("dog_name"),
+                rs.getInt("dog_age"),
+                rs.getString("dog_breed"),
+                rs.getInt("dog_sex")), selectDogParams);
+    }
 }

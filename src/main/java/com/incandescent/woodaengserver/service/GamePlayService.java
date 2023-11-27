@@ -1,10 +1,12 @@
 package com.incandescent.woodaengserver.service;
 
+import ch.hsr.geohash.GeoHash;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.incandescent.woodaengserver.dto.DogInfo;
 import com.incandescent.woodaengserver.dto.game.*;
 import com.incandescent.woodaengserver.repository.GameRepository;
 import lombok.SneakyThrows;
@@ -12,7 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.*;
+import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -26,10 +32,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -189,119 +192,147 @@ public class GamePlayService {
 //        redisPublisher.publishGameEvent(gameCode, jsonGamePlayResponse);
     }
 
-//    public void realTimeLocation(String gameCode, GameReadyRequest gameReadyRequest) throws JsonProcessingException {
-//        // 다른 사용자와 만나면 전송. 실시간 위치 처리 로직
-//
-//
-//        Long opponentId = 0L; // 상대방
-//
-//        int gameType = (int) Math.round(Math.random());
-//        String question = null;
-//        HashMap<Integer, String> options = null;
-//        int answer = 0;
-//
-//        switch (gameType) {
-//            case 0: //댕댕퀴즈
-//                List<Object> quiz = getQuiz(상대id);
-//                question = (String) quiz.get(0);
-//                options = (HashMap<Integer, String>) quiz.get(1);
-//                answer = (int) quiz.get(2);
-//                break;
-//            case 1: //댕기자랑
-//                String[] commands = {"앉아", "엎드려", "손"};
-//                question = commands[(int) (Math.random() * commands.length)];
-//                break;
-//        }
-//
-//        GameMiniResponse gameMiniResponse = new GameMiniResponse(gameReadyRequest.getId(), gameType, opponentId, question, options, answer);
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
-//        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
-//    }
-//
-//    public List<Object> getQuiz(Long id) {
-//
-//        List<Object> quiz = new ArrayList<>();
-//        int questionType = (int) (Math.random() * 3);
-//
-//        String question = null;
-//        HashMap<Integer, String> options = new HashMap<>();
-//        int answer = 0;
-//
-//        List<Object> dog = gameRepository.selectDog(id);
-//
-//        switch (questionType) {
-//            case 0: //나이
-//                question = dog.get(0) + "의 나이는 몇 살일까요?";
-//                int age = (int) dog.get(1);
-//                answer = (int) (Math.random() * 4) + 1;
-//
-//                options.put(answer, age+"살"); //정답
-//
-//                int value = age;
-//                int num = answer;
-//                while (num > 0) {
-//                    options.put(--num, --value+"살");
-//                }
-//                num = answer;
-//                value = age;
-//                while (num < 5) {
-//                    options.put(++num, ++value+"살");
-//                }
-//                break;
-//            case 1: //견종
-//                question = dog.get(0) + "는 무슨 종일까요?";
-//                String breed = (String) dog.get(2);
-//                answer = (int) (Math.random() * 4) + 1;
-//
-//                List<String> breedList = new ArrayList<>();
-//                breedList.add("말티스");
-//                breedList.add("푸들");
-//                breedList.add("스피츠");
-//                breedList.add("치와와");
-//                breedList.add("포메라니안");
-//                breedList.add("토이푸들");
-//                breedList.add("시츄");
-//                breedList.add("비숑 프리제");
-//                breedList.add("웰시코기");
-//                breedList.add("사모예드");
-//
-//                options.put(answer, breed); //정답
-//
-//                List<Integer> ops = new ArrayList<>();
-//                ops.add(breedList.indexOf(breed));
-//                while (ops.size() < 5) {
-//                    int index = (int) (Math.random() * breedList.size());
-//                    if (!ops.contains(index))
-//                        ops.add(index);
-//                }
-//                ops.remove(breedList.indexOf(breed));
-//                num = answer;
-//                int i = 0;
-//                while (num > 0) {
-//                    options.put(--num, breedList.get(i++));
-//                }
-//                num = answer;
-//                while (num < 5) {
-//                    options.put(++num, breedList.get(i++));
-//                }
-//                break;
-//            case 2: //성별
-//                question = dog.get(0) + "의 성별은 무엇일까요?";
-//                int sex = (int) dog.get(3);
-//                options.put(1, "남자");
-//                options.put(2, "여자");
-//                answer = sex + 1;
-//                break;
-//        }
-//
-//
-//        quiz.add(question);
-//        quiz.add(options);
-//        quiz.add(answer);
-//
-//        return quiz;
-//    }
+    public List<PlayerLocation> findNearByLocation(double latitude, double longitude, int team) {
+        GeoOperations<String, String> ops = redisTemplate.opsForGeo();
+        GeoResults<RedisGeoCommands.GeoLocation<String>> result = ops.radius(
+                "NearPlayer",
+                new Circle(new Point(latitude, longitude), new Distance(3, Metrics.METERS)),
+                RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs().includeDistance());
+        List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = result.getContent();
+
+        List<PlayerLocation> rs = new ArrayList<>();
+        list.stream()
+                .filter(obj -> {
+                    Long id = Long.valueOf(obj.getContent().getName());
+                    int playerTeam = gameRepository.selectTeam(id);
+                    return playerTeam != team;
+                })
+                .forEach(obj->{
+                    Long id = Long.valueOf(obj.getContent().getName());
+                    int playerTeam = gameRepository.selectTeam(id);
+                    double retLatitude = obj.getContent().getPoint().getX();
+                    double retLongitude = obj.getContent().getPoint().getY();
+                    rs.add(new PlayerLocation(id, playerTeam, new Point(retLatitude, retLongitude)));
+                });
+
+        return rs;
+    }
+
+
+    public void realTimeLocation(String gameCode, PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
+        List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
+
+        Long opponentId = nearPlayerList.get(0).getId();
+
+        int gameType = (int) Math.round(Math.random());
+        String question = null;
+        HashMap<Integer, String> options = null;
+        int answer = 0;
+
+        switch (gameType) {
+            case 0: //댕댕퀴즈
+                List<Object> quiz = getQuiz(opponentId);
+                question = (String) quiz.get(0);
+                options = (HashMap<Integer, String>) quiz.get(1);
+                answer = (int) quiz.get(2);
+                break;
+            case 1: //댕기자랑
+                String[] commands = {"앉아", "엎드려", "손"};
+                question = commands[(int) (Math.random() * commands.length)];
+                break;
+        }
+
+        LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
+
+        GameMiniResponse gameMiniResponse = new GameMiniResponse(startTime.toString(), playerMatchRequest.getId(), gameType, opponentId, question, options, answer);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
+        messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
+    }
+
+    public List<Object> getQuiz(Long id) {
+
+        List<Object> quiz = new ArrayList<>();
+        int questionType = (int) (Math.random() * 3);
+
+        String question = null;
+        HashMap<Integer, String> options = new HashMap<>();
+        int answer = 0;
+
+        DogInfo dog = gameRepository.selectDog(id);
+
+        switch (questionType) {
+            case 0: //나이
+                question = dog.getName() + "의 나이는 몇 살일까요?";
+                int age = dog.getAge();
+                answer = (int) (Math.random() * 4) + 1;
+
+                options.put(answer, age+"살"); //정답
+
+                int value = age;
+                int num = answer;
+                while (num > 0) {
+                    options.put(--num, --value+"살");
+                }
+                num = answer;
+                value = age;
+                while (num < 5) {
+                    options.put(++num, ++value+"살");
+                }
+                break;
+            case 1: //견종
+                question = dog.getName() + "는 무슨 종일까요?";
+                String breed = dog.getBreed();
+                answer = (int) (Math.random() * 4) + 1;
+
+                List<String> breedList = new ArrayList<>();
+                breedList.add("말티스");
+                breedList.add("푸들");
+                breedList.add("스피츠");
+                breedList.add("치와와");
+                breedList.add("포메라니안");
+                breedList.add("토이푸들");
+                breedList.add("시츄");
+                breedList.add("비숑 프리제");
+                breedList.add("웰시코기");
+                breedList.add("사모예드");
+
+                options.put(answer, breed); //정답
+
+                List<Integer> ops = new ArrayList<>();
+                ops.add(breedList.indexOf(breed));
+                while (ops.size() < 5) {
+                    int index = (int) (Math.random() * breedList.size());
+                    if (!ops.contains(index))
+                        ops.add(index);
+                }
+                ops.remove(breedList.indexOf(breed));
+                num = answer;
+                int i = 0;
+                while (num > 0) {
+                    options.put(--num, breedList.get(i++));
+                }
+                num = answer;
+                while (num < 5) {
+                    options.put(++num, breedList.get(i++));
+                }
+                break;
+            case 2: //성별
+                question = dog.getName() + "의 성별은 무엇일까요?";
+                int sex = dog.getSex();
+                options.put(1, "남자");
+                options.put(2, "여자");
+                answer = sex + 1;
+                break;
+        }
+
+
+        quiz.add(question);
+        quiz.add(options);
+        quiz.add(answer);
+
+        return quiz;
+    }
 
     public static class endJob implements Job {
         public endJob() {}

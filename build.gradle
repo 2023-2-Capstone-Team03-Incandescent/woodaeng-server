@@ -45,6 +45,8 @@ dependencies {
 
 	implementation 'org.quartz-scheduler:quartz'
 
+	implementation 'ch.hsr:geohash:1.4.0'
+
 }
 
 tasks.named('test') {
