@@ -247,43 +247,39 @@ public class GameMatchingService {
             ArrayNode arrayNode1 = (ArrayNode) jsonNode1.get("features");
 
 
-            int i = 0;
-            while(i < 2) {
-                JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
-                JsonNode geometryJson2 = featureJson.get("geometry");
+            JsonNode featureJson = arrayNode1.get((int) (Math.random() * ((arrayNode.size() / 2) / 2)) * 2 + 1);
+            JsonNode geometryJson2 = featureJson.get("geometry");
 
 //                if((featureJson.get("properties")).get("facilityType").equals("11")) {
-                    JsonNode coordinatesLists = geometryJson2.get("coordinates");
+                JsonNode coordinatesLists = geometryJson2.get("coordinates");
 
-                    List<List<Double>> coordinatesList5 = new ArrayList<>();
-                    for (JsonNode coordinate : coordinatesLists) {
-                        if (coordinate.isArray() && coordinate.size() >= 2) {
-                            double latitude = coordinate.get(1).asDouble();
-                            double longitude = coordinate.get(0).asDouble();
-                            coordinatesList5.add(Arrays.asList(latitude, longitude));
+                List<List<Double>> coordinatesList5 = new ArrayList<>();
+                for (JsonNode coordinate : coordinatesLists) {
+                    if (coordinate.isArray() && coordinate.size() >= 2) {
+                        double latitude = coordinate.get(1).asDouble();
+                        double longitude = coordinate.get(0).asDouble();
+                        coordinatesList5.add(Arrays.asList(latitude, longitude));
+                    }
+                }
+                log.info(coordinatesList5.toString());
+
+                int num = (int) (Math.random() * coordinatesLists.size());
+                double lat = coordinatesList5.get(num).get(0);
+                double lon = coordinatesList5.get(num).get(1);
+                boolean contain = false;
+                for (int j = 0; j < balls.size(); j++) {
+                    if (lat == balls.get(j).getLatitude() && lon == balls.get(j).getLongitude()) {
+                            contain = true;
+                            break;
                         }
-                    }
-                    log.info(coordinatesList5.toString());
-
-                    int num = (int) (Math.random() * coordinatesLists.size());
-                    double lat = coordinatesList5.get(num).get(0);
-                    double lon = coordinatesList5.get(num).get(1);
-                    boolean contain = false;
-                    for (int j = 0; j < balls.size(); j++) {
-                        if (lat == balls.get(j).getLatitude() && lon == balls.get(j).getLongitude()) {
-                                contain = true;
-                                break;
-                            }
-                    }
-                    if (!contain) {
-                        BallLocation balladd = new BallLocation(ballIndex++, lat, lon);
-                        balls.add(balladd);
-                        log.info("ball add!!!!!!!!!!!!!!!!!!");
-                        log.info(balladd.toString());
-                        i++;
-                    }
+                }
+                if (!contain) {
+                    BallLocation balladd = new BallLocation(ballIndex++, lat, lon);
+                    balls.add(balladd);
+                    log.info("ball add!!!!!!!!!!!!!!!!!!");
+                    log.info(balladd.toString());
+                }
 //                }
-            }
         }
         gameRepository.insertBalls(gameCode, balls);
         PlayerMatchResponse playerMatchResponse = new PlayerMatchResponse(gameCode, teamRed, teamBlue, balls);
