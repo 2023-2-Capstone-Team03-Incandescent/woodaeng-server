@@ -1,4 +1,4 @@
-package com.incandescent.woodaengserver.repository;
+package com.incandescent.woodaengserver.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

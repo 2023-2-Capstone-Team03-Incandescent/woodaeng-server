@@ -2,10 +2,7 @@ package com.incandescent.woodaengserver.repository;
 
 import com.incandescent.woodaengserver.domain.Point;
 import com.incandescent.woodaengserver.domain.User;
-import com.incandescent.woodaengserver.dto.GameRecordInfo;
-import com.incandescent.woodaengserver.dto.Ranking;
-import com.incandescent.woodaengserver.dto.UpdateProfileRequest;
-import com.incandescent.woodaengserver.dto.UserProfileResponse;
+import com.incandescent.woodaengserver.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -89,6 +86,19 @@ public class UserRepository {
         return this.jdbcTemplate.queryForObject(checkIdQuery, int.class, checkIdParam);
     }
 
+    public boolean checkNickname(String nickname) {
+        String checkUserQuery = "select exists(select * from user where nickname = ?)";
+
+        int result = this.jdbcTemplate.queryForObject(checkUserQuery, int.class, nickname);
+
+        if (result != 1)
+            return false;
+
+        return true;
+    }
+
+
+
     public void saveProfile(UserProfileResponse userProfileResponse) {
         String updateUserQuery = "update user set nickname = ?, image_id = ?, dog_name = ?, dog_age = ?, dog_breed = ?, dog_sex = ? where id = ?";
         Object[] updateUserParams = new Object[]{userProfileResponse.getNickname(), userProfileResponse.getImage_id(), userProfileResponse.getDog_name(), userProfileResponse.getDog_age(), userProfileResponse.getDog_breed(), userProfileResponse.getDog_sex(), userProfileResponse.getId()};
@@ -170,9 +180,8 @@ public class UserRepository {
         ), getPointListParams);
     }
 
-    public List<Ranking> getRanking(Long id) {
+    public List<Ranking> getRanking() {
         String getRankingQuery = "select id, (SELECT COUNT(*) + 1 FROM user u2 WHERE u2.win_cnt > u1.win_cnt) AS rank, image_id, nickname, win_cnt from user u1 order by win_cnt desc";
-        Object[] getRankingParams = new Object[]{id};
 
         return this.jdbcTemplate.query(getRankingQuery, ((rs, rowNum) -> new Ranking(
                 rs.getLong("id"),
@@ -180,6 +189,6 @@ public class UserRepository {
                 rs.getString("image_id"),
                 rs.getString("nickname"),
                 rs.getInt("win_cnt"))
-        ), getRankingParams);
+        ));
     }
 }

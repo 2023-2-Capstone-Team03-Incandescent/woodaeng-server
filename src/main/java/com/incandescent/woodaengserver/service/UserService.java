@@ -1,27 +1,23 @@
 package com.incandescent.woodaengserver.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.incandescent.woodaengserver.domain.Point;
 import com.incandescent.woodaengserver.domain.User;
 import com.incandescent.woodaengserver.dto.*;
-import com.incandescent.woodaengserver.repository.TrophyInfo;
+import com.incandescent.woodaengserver.dto.TrophyInfo;
 import com.incandescent.woodaengserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 
@@ -83,6 +79,9 @@ public class UserService {
                 userProfileResponse.getDog_sex());
     }
 
+    public boolean checkNickname(String nickname) {
+        return userRepository.checkNickname(nickname);
+    }
     public String getProfileImage(Long id) {
         return s3Client.getUrl(bucketName, userRepository.selectImageById(id)).toString();
     }
@@ -99,8 +98,8 @@ public class UserService {
         return userRepository.getGameRecord(id);
     }
 
-    public List<Ranking> getRanking(Long id) {
-        return userRepository.getRanking(id);
+    public List<Ranking> getRanking() {
+        return userRepository.getRanking();
     }
 
     public TrophyInfo getTrophy(Long id) {

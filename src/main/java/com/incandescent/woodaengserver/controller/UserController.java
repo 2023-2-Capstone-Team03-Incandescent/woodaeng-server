@@ -41,6 +41,11 @@ public class UserController {
         }
     }
 
+    @GetMapping("/{nickname}")
+    public ResponseEntity checkNickname(@PathVariable("nickname") String nickname) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.checkNickname(nickname));
+    }
+
     @GetMapping("/image/{id}")
     public ResponseEntity getProfileImage(@PathVariable("id") Long id) {
         String image_url = userService.getProfileImage(id);
@@ -73,9 +78,9 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getGameRecord(id));
     }
 
-    @GetMapping("/ranking/{id}")
-    public ResponseEntity getRanking(@PathVariable("id") Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.getRanking(id));
+    @GetMapping("/ranking")
+    public ResponseEntity getRanking() {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getRanking());
     }
 
     @GetMapping("/trophy/{id}")
