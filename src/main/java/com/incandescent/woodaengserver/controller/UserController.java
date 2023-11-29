@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity updateProfile(@Payload UpdateProfileRequest updateProfileRequest) {
+    public ResponseEntity updateProfile(@RequestBody UpdateProfileRequest updateProfileRequest) {
         try {
             userService.updateProfile(updateProfileRequest);
             return ResponseEntity.status(HttpStatus.OK).build();
