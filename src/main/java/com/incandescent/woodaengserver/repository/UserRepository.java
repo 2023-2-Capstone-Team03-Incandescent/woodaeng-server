@@ -1,12 +1,18 @@
 package com.incandescent.woodaengserver.repository;
 
+import com.incandescent.woodaengserver.domain.Point;
 import com.incandescent.woodaengserver.domain.User;
+import com.incandescent.woodaengserver.dto.GameRecordInfo;
+import com.incandescent.woodaengserver.dto.Ranking;
+import com.incandescent.woodaengserver.dto.UpdateProfileRequest;
+import com.incandescent.woodaengserver.dto.UserProfileResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @Repository
 public class UserRepository {
@@ -20,7 +26,7 @@ public class UserRepository {
 
 
     public User insertUser(User user) {
-        String insertUserQuery = "insert into user (email, nickname, password, role, provider, provider_id) values (?,?,?,?,?,?)";
+        String insertUserQuery = "insert into user (email, nickname, password, role, provider, provider_id, win_cnt) values (?,?,?,?,?,?,0)";
         Object[] insertUserParams = new Object[]{user.getEmail(), user.getNickname(), user.getPassword(), user.getRole(), user.getProvider(), user.getProvider_id()};
 
         this.jdbcTemplate.update(insertUserQuery, insertUserParams);
@@ -28,6 +34,12 @@ public class UserRepository {
         Long lastInsertId = this.jdbcTemplate.queryForObject("select last_insert_id()", Long.class);
 
         user.setId(lastInsertId);
+
+
+        insertUserQuery = "insert into trophy (id, ball_cnt, gold_cnt, box_cnt, mini_cnt, game_cnt, win_cnt, mvp_cnt) values (?, 0, 0, 0, 0, 0, 0, 0)";
+        insertUserParams = new Object[]{lastInsertId};
+
+        this.jdbcTemplate.update(insertUserQuery, insertUserParams);
 
         return user;
     }
@@ -75,5 +87,99 @@ public class UserRepository {
         String checkIdQuery = "select exists(select nickname from user where id = ? and status = 1)";
         Long checkIdParam = id;
         return this.jdbcTemplate.queryForObject(checkIdQuery, int.class, checkIdParam);
+    }
+
+    public void saveProfile(UserProfileResponse userProfileResponse) {
+        String updateUserQuery = "update user set nickname = ?, image_id = ?, dog_name = ?, dog_age = ?, dog_breed = ?, dog_sex = ? where id = ?";
+        Object[] updateUserParams = new Object[]{userProfileResponse.getNickname(), userProfileResponse.getImage_id(), userProfileResponse.getDog_name(), userProfileResponse.getDog_age(), userProfileResponse.getDog_breed(), userProfileResponse.getDog_sex(), userProfileResponse.getId()};
+
+        this.jdbcTemplate.update(updateUserQuery, updateUserParams);
+    }
+
+    public UserProfileResponse selectProfileById(Long id) {
+        String selectUserQuery = "select id, nickname, image_id, dog_name, dog_age, dog_breed, dog_sex from user where id = ?";
+        Object[] selectUserParams = new Object[]{id};
+
+        return this.jdbcTemplate.queryForObject(selectUserQuery,
+                (rs, rowNum) -> new UserProfileResponse(
+                        rs.getLong("id"),
+                        rs.getString("nickname"),
+                        rs.getString("Image_id"),
+                        rs.getString("dog_name"),
+                        rs.getInt("dog_age"),
+                        rs.getString("dog_breed"),
+                        rs.getInt("dog_sex")
+                ), selectUserParams);
+    }
+
+    public String selectImageById(Long id) {
+        String selectUserQuery = "select image_id from user where id = ?";
+        Object[] selectUserParams = new Object[]{id};
+
+        return this.jdbcTemplate.queryForObject(selectUserQuery, String.class, selectUserParams);
+    }
+
+
+    public int getPoint(Long id) {
+        String getPointQuery = "select sum(point) from point where id = ?";
+        Object[] getPointParams = new Object[]{id};
+
+        return this.jdbcTemplate.queryForObject(getPointQuery, Integer.class, getPointParams);
+    }
+
+    public TrophyInfo getTrophy(Long id) {
+        String getTrophyQuery = "select * from trophy where id = ?";
+        Object[] getTrophyParams = new Object[]{id};
+
+        return this.jdbcTemplate.queryForObject(getTrophyQuery, (rs, count) -> new TrophyInfo(
+                rs.getLong("id"),
+                rs.getInt("ball_cnt"),
+                rs.getInt("gold_cnt"),
+                rs.getInt("box_cnt"),
+                rs.getInt("mini_cnt"),
+                rs.getInt("game_cnt"),
+                rs.getInt("win_cnt"),
+                rs.getInt("mvp_cnt")
+        ), getTrophyParams);
+    }
+
+    public List<GameRecordInfo> getGameRecord(Long id) {
+        String getGameRecordQuery = "select * from gameRecord where id = ?";
+        Object[] getGameRecordParams = new Object[]{id};
+
+        return this.jdbcTemplate.query(getGameRecordQuery, ((rs, count) -> new GameRecordInfo(
+                rs.getLong("id"),
+                rs.getString("game_code"),
+                rs.getInt("mvp"),
+                rs.getInt("win"),
+                rs.getString("location"),
+                rs.getInt("ball_cnt"),
+                rs.getTimestamp("time"))
+        ), getGameRecordParams);
+    }
+
+    public List<Point> getPointList(Long id) {
+        String getPointListQuery = "select * from point where id = ?";
+        Object[] getPointListParams = new Object[]{id};
+
+        return this.jdbcTemplate.query(getPointListQuery, ((rs, rowNum) -> new Point(
+                rs.getLong("id"),
+                rs.getInt("point"),
+                rs.getString("detail"),
+                rs.getTimestamp("time"))
+        ), getPointListParams);
+    }
+
+    public List<Ranking> getRanking(Long id) {
+        String getRankingQuery = "select id, (SELECT COUNT(*) + 1 FROM user u2 WHERE u2.win_cnt > u1.win_cnt) AS rank, image_id, nickname, win_cnt from user u1 order by win_cnt desc";
+        Object[] getRankingParams = new Object[]{id};
+
+        return this.jdbcTemplate.query(getRankingQuery, ((rs, rowNum) -> new Ranking(
+                rs.getLong("id"),
+                rs.getInt("rank"),
+                rs.getString("image_id"),
+                rs.getString("nickname"),
+                rs.getInt("win_cnt"))
+        ), getRankingParams);
     }
 }

@@ -1,24 +1,41 @@
 package com.incandescent.woodaengserver.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.incandescent.woodaengserver.domain.Point;
 import com.incandescent.woodaengserver.domain.User;
+import com.incandescent.woodaengserver.dto.*;
+import com.incandescent.woodaengserver.repository.TrophyInfo;
 import com.incandescent.woodaengserver.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
 
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserProvider userProvider;
     private final UserRepository userRepository;
-
+    @Value("${application.bucket.name}")
+    private String bucketName;
     @Autowired
-    public UserService( UserProvider userProvider, UserRepository userRepository) {
-        this.userProvider = userProvider;
-        this.userRepository = userRepository;
-    }
+    private AmazonS3 s3Client;
 
     public User createUser(User user) throws Exception {
         if (userProvider.checkEmail(user.getEmail()) == 1)
@@ -29,5 +46,64 @@ public class UserService {
             e.printStackTrace();
             throw new Exception("Database Error");
         }
+    }
+
+
+    public void updateProfile(UpdateProfileRequest updateProfileRequest) {
+        MultipartFile originFile = updateProfileRequest.getImage();
+        File file = new File(originFile.getOriginalFilename());
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(originFile.getBytes());
+        } catch (IOException e) {
+            log.error("Error converting multipartFile to file", e);
+        }
+
+        String fileName = updateProfileRequest.getId() + "_profile";
+        s3Client.deleteObject(new DeleteObjectRequest(bucketName, fileName));
+        s3Client.putObject(new PutObjectRequest(bucketName, fileName, file));
+        file.delete();
+
+        userRepository.saveProfile(new UserProfileResponse(
+                updateProfileRequest.getId(),
+                updateProfileRequest.getNickname(),
+                s3Client.getUrl(bucketName, fileName).toString(),
+                updateProfileRequest.getDog_name(),
+                updateProfileRequest.getDog_age(),
+                updateProfileRequest.getDog_breed(),
+                updateProfileRequest.getDog_sex()
+        ));
+    }
+
+    public UserProfileResponse getProfile(Long id) {
+        UserProfileResponse userProfileResponse = userRepository.selectProfileById(id);
+
+        String url = s3Client.getUrl(bucketName, userProfileResponse.getImage_id()).toString();
+        return new UserProfileResponse(userProfileResponse.getId(), userProfileResponse.getNickname(),
+                url, userProfileResponse.getDog_name(), userProfileResponse.getDog_age(), userProfileResponse.getDog_breed(),
+                userProfileResponse.getDog_sex());
+    }
+
+    public String getProfileImage(Long id) {
+        return s3Client.getUrl(bucketName, userRepository.selectImageById(id)).toString();
+    }
+    
+    public int getPoint(Long id) {
+        return userRepository.getPoint(id);
+    }
+
+    public List<Point> getPointList(Long id) {
+        return userRepository.getPointList(id);
+    }
+    
+    public List<GameRecordInfo> getGameRecord(Long id) {
+        return userRepository.getGameRecord(id);
+    }
+
+    public List<Ranking> getRanking(Long id) {
+        return userRepository.getRanking(id);
+    }
+
+    public TrophyInfo getTrophy(Long id) {
+        return userRepository.getTrophy(id);
     }
 }

@@ -1,15 +1,12 @@
 package com.incandescent.woodaengserver.repository;
 
 import com.incandescent.woodaengserver.dto.DogInfo;
+import com.incandescent.woodaengserver.dto.GameRecordInfo;
 import com.incandescent.woodaengserver.dto.game.BallLocation;
 import com.incandescent.woodaengserver.dto.game.GamePlayerResult;
 import com.incandescent.woodaengserver.dto.game.GameResultResponse;
-import com.incandescent.woodaengserver.dto.game.PlayerLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Point;
-import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -169,5 +166,26 @@ public class GameRepository {
                 rs.getInt("dog_age"),
                 rs.getString("dog_breed"),
                 rs.getInt("dog_sex")), selectDogParams);
+    }
+
+    public void saveRecord(String gameCode, GameResultResponse gameResultResponse, int mvp, String dongName) {
+        String saveRecordQuery = "insert into gameRecord (id, game_code, mvp, win, location, ball_cnt) values (?,?,?,?,?,?)";
+        Object[] saveRecordParams;
+        for (int i = 0; i < gameResultResponse.getPlayerResults().size(); i++) {
+            GamePlayerResult playerResult = gameResultResponse.getPlayerResults().get(i);
+            saveRecordParams = new Object[]{playerResult.getId(), gameCode, mvp, gameResultResponse.getTeam() == playerResult.getTeam() ? 1 : 0, dongName, playerResult.getBall_cnt()};
+            this.jdbcTemplate.update(saveRecordQuery, saveRecordParams);
+
+            saveRecordQuery = "update trophy set ball_cnt = ball_cnt + ?, gold_cnt = gold_cnt + ?, box_cnt = box_cnt + ?, mini_cnt = mini_cnt + ?, game_cnt = game_cnt + 1, win_cnt = win_cnt + ?, mvp_cnt = mvp_cnt + ? where id = ?";
+            saveRecordParams = new Object[]{playerResult.getBall_cnt(), playerResult.getGold_cnt(), playerResult.getBox_cnt(), playerResult.getMini_cnt(), gameResultResponse.getTeam() == playerResult.getTeam() ? 1 : 0, mvp == playerResult.getId() ? 1 : 0, playerResult.getId()};
+            this.jdbcTemplate.update(saveRecordQuery, saveRecordParams);
+        }
+    }
+
+    public void addPoint(Long id, int point, String detail) {
+        String addPointQuery = "insert into point (id, point, detail) values (?,?,?)";
+        Object[] addPointParams = new Object[]{point, id, detail};
+
+        this.jdbcTemplate.update(addPointQuery, addPointParams);
     }
 }

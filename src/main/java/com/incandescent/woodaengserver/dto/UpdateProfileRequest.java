@@ -8,10 +8,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileResponse {
+public class UpdateProfileRequest {
     private Long id;
     private String nickname;
-    private String image_id;
+    private MultipartFile image;
     private String dog_name;
     private int dog_age;
     private String dog_breed;

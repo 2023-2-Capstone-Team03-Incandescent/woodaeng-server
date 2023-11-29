@@ -46,6 +46,7 @@ public class GamePlayService {
     private static int goldNum = 20;
     private static int randNum = 30;
     private static GameRepository gameRepository = null;
+    private static String dongName = null;
 
     @Autowired
     public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository) {
@@ -134,7 +135,7 @@ public class GamePlayService {
                     break;
                 case 4: // 포인트
                     gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
-                    // 포인트 추가 로직
+                    gameRepository.addPoint(gamePlayRequest.getId(), 50, "랜덤박스");
                     break;
                 case 5: //red+
                     List<Integer> blueBalls = gameRepository.selectOurBall(gameCode, 1);
@@ -353,6 +354,14 @@ public class GamePlayService {
             String jsonGameResultResponse = new ObjectMapper().writeValueAsString(gameResultResponse);
 
             messagingTemplate.convertAndSend("/topic/game/end/" + gameCode, jsonGameResultResponse);
+
+            List<Integer> ball_cnt = new ArrayList<>();
+            for (int i = 0; i < gameResultResponse.getPlayerResults().size(); i++) {
+                ball_cnt.add(gameResultResponse.getPlayerResults().get(i).getBall_cnt());
+            }
+
+
+            gameRepository.saveRecord(gameCode, gameResultResponse, ball_cnt.indexOf(Collections.max(ball_cnt)), dongName);
             log.info("end JOB!!!!!!");
         }
     }
@@ -396,6 +405,8 @@ public class GamePlayService {
             JsonNode geometryJson = featuresJson.get("geometry");
             ArrayNode coordinatesJson = (ArrayNode) geometryJson.get("coordinates");
             JsonNode coordinatesList = coordinatesJson.get(0);
+
+            dongName = String.valueOf(featuresJson.get("properties").get("regionName"));
 
             List<List<Double>> coorRes = new ArrayList<>();
             for (JsonNode coordinate : coordinatesList) {

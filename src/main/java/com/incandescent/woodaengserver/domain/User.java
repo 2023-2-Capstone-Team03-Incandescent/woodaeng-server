@@ -13,6 +13,8 @@ public class User {
     private String email;
     private String nickname;
     private String password;
+    private int win_cnt;
+    private Long image_id;
     private String dog_name;
     private int dog_age;
     private String dog_breed;
