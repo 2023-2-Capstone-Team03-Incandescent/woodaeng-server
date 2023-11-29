@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -53,9 +54,9 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity updateProfile(@RequestBody UpdateProfileRequest updateProfileRequest) {
+    public ResponseEntity updateProfile(@RequestParam("profile") UpdateProfileRequest updateProfileRequest, @RequestPart("image") MultipartFile image) {
         try {
-            userService.updateProfile(updateProfileRequest);
+            userService.updateProfile(updateProfileRequest, image);
             return ResponseEntity.status(HttpStatus.OK).build();
         }
         catch (Exception e) {

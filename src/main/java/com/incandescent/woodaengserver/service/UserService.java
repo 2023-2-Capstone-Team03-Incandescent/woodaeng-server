@@ -45,11 +45,10 @@ public class UserService {
     }
 
 
-    public void updateProfile(UpdateProfileRequest updateProfileRequest) {
-        MultipartFile originFile = updateProfileRequest.getImage();
-        File file = new File(originFile.getOriginalFilename());
+    public void updateProfile(UpdateProfileRequest updateProfileRequest, MultipartFile image) {
+        File file = new File(image.getOriginalFilename());
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(originFile.getBytes());
+            fos.write(image.getBytes());
         } catch (IOException e) {
             log.error("Error converting multipartFile to file", e);
         }
