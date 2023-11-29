@@ -1,5 +1,6 @@
 package com.incandescent.woodaengserver.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incandescent.woodaengserver.dto.UpdateProfileRequest;
 import com.incandescent.woodaengserver.service.UserProvider;
 import com.incandescent.woodaengserver.dto.UserProfileResponse;
@@ -54,8 +55,9 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity updateProfile(@RequestParam("profile") UpdateProfileRequest updateProfileRequest, @RequestPart("image") MultipartFile image) {
+    public ResponseEntity updateProfile(@RequestParam("profile") String profileJson, @RequestPart("image") MultipartFile image) {
         try {
+            UpdateProfileRequest updateProfileRequest = new ObjectMapper().readValue(profileJson, UpdateProfileRequest.class);
             userService.updateProfile(updateProfileRequest, image);
             return ResponseEntity.status(HttpStatus.OK).build();
         }
