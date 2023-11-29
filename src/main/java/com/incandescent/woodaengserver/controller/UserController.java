@@ -55,7 +55,7 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity updateProfile(@RequestParam("profile") String profileJson, @RequestPart("image") MultipartFile image) {
+    public ResponseEntity updateProfile(@RequestParam("profile") String profileJson, @RequestParam("image") MultipartFile image) {
         try {
             UpdateProfileRequest updateProfileRequest = new ObjectMapper().readValue(profileJson, UpdateProfileRequest.class);
             userService.updateProfile(updateProfileRequest, image);
