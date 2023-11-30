@@ -78,9 +78,9 @@ public class JwtTokenProvider {
 //        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
 //    }
 
-    public String getUseridFromAcs(String token) {
-        return Jwts.parserBuilder().setSigningKey(accessKey).build()
-                .parseClaimsJws(token).getBody().getSubject();
+    public Long getUseridFromAcs(String token) {
+        return Long.valueOf(Jwts.parserBuilder().setSigningKey(accessKey).build()
+                .parseClaimsJws(token).getBody().getSubject());
     }
 
     public Long getUseridFromRef(String token) {

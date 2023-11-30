@@ -135,7 +135,7 @@ public class GamePlayService {
                     break;
                 case 4: // 포인트
                     gamePlayResponse = new GamePlayResponse(gamePlayRequest.getId(), gamePlayRequest.getTeam(), 40, 40, redScore, 20-redScore, random);
-                    gameRepository.addPoint(gamePlayRequest.getId(), 50, "랜덤박스");
+                    gameRepository.addPoint(gamePlayRequest.getId(), 50, "랜덤 박스");
                     break;
                 case 5: //red+
                     List<Integer> blueBalls = gameRepository.selectOurBall(gameCode, 1);

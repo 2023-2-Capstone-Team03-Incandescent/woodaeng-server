@@ -11,7 +11,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Repository
@@ -176,9 +179,69 @@ public class GameRepository {
             saveRecordParams = new Object[]{playerResult.getId(), gameCode, mvp, gameResultResponse.getTeam() == playerResult.getTeam() ? 1 : 0, dongName, playerResult.getBall_cnt()};
             this.jdbcTemplate.update(saveRecordQuery, saveRecordParams);
 
-            saveRecordQuery = "update trophy set ball_cnt = ball_cnt + ?, gold_cnt = gold_cnt + ?, box_cnt = box_cnt + ?, mini_cnt = mini_cnt + ?, game_cnt = game_cnt + 1, win_cnt = win_cnt + ?, mvp_cnt = mvp_cnt + ? where id = ?";
+            if (gameResultResponse.getTeam() == playerResult.getTeam())
+                addPoint(playerResult.getId(), 30, "게임 승리");
+
+            if (mvp == playerResult.getId())
+                addPoint(playerResult.getId(), 100, "MVP 달성");
+
+
+            String savetrophyQuery = "select * from trohpy where id = ?";
+            saveRecordParams = new Object[]{playerResult.getId()};
+            HashMap trophyMap = this.jdbcTemplate.queryForObject(savetrophyQuery, (rs, rowNum) -> new HashMap() {{
+                put("ball_cnt", rs.getInt("ball_cnt"));
+                put("gold_cnt" ,rs.getInt("gold_cnt"));
+                put("box_cnt", rs.getInt("box_cnt"));
+                put("mini_cnt" ,rs.getInt("mini_cnt"));
+                put("game_cnt", rs.getInt("game_cnt"));
+                put("win_cnt" ,rs.getInt("win_cnt"));
+                put("mvp_cnt", rs.getInt("mvp_cnt"));
+            }}, saveRecordParams);
+            List trophyList = new ArrayList();
+            if ((int) trophyMap.get("ball_cnt") < 50)
+                trophyList.add("ball_cnt");
+            if ((int) trophyMap.get("gold_cnt") < 15)
+                trophyList.add("gold_cnt");
+            if ((int) trophyMap.get("box_cnt") < 15)
+                trophyList.add("box_cnt");
+            if ((int) trophyMap.get("mini_cnt") < 10)
+                trophyList.add("mini_cnt");
+            if ((int) trophyMap.get("game_cnt") < 20)
+                trophyList.add("game_cnt");
+            if ((int) trophyMap.get("win_cnt") < 10)
+                trophyList.add("win_cnt");
+            if ((int) trophyMap.get("mvp_cnt") < 5)
+                trophyList.add("mvp_cnt");
+
+
+            savetrophyQuery = "update trophy set ball_cnt = ball_cnt + ?, gold_cnt = gold_cnt + ?, box_cnt = box_cnt + ?, mini_cnt = mini_cnt + ?, game_cnt = game_cnt + 1, win_cnt = win_cnt + ?, mvp_cnt = mvp_cnt + ? where id = ?";
             saveRecordParams = new Object[]{playerResult.getBall_cnt(), playerResult.getGold_cnt(), playerResult.getBox_cnt(), playerResult.getMini_cnt(), gameResultResponse.getTeam() == playerResult.getTeam() ? 1 : 0, mvp == playerResult.getId() ? 1 : 0, playerResult.getId()};
-            this.jdbcTemplate.update(saveRecordQuery, saveRecordParams);
+            this.jdbcTemplate.update(savetrophyQuery, saveRecordParams);
+
+
+            savetrophyQuery = "select * from trohpy where id = ?";
+            saveRecordParams = new Object[]{playerResult.getId()};
+            HashMap updatedMap = this.jdbcTemplate.queryForObject(savetrophyQuery, (rs, rowNum) -> new HashMap() {{
+                for (Object str : trophyList) {
+                    put(str.toString(), rs.getInt(str.toString()));
+                }
+            }}, saveRecordParams);
+
+            if ((int) updatedMap.getOrDefault("ball_cnt", 0) >= 50)
+                addPoint(playerResult.getId(), 30, "업적 달성");
+            if ((int) updatedMap.getOrDefault("gold_cnt", 0) >= 15)
+                addPoint(playerResult.getId(), 30, "업적 달성");
+            if ((int) updatedMap.getOrDefault("box_cnt", 0) >= 15)
+                addPoint(playerResult.getId(), 30, "업적 달성");
+            if ((int) updatedMap.getOrDefault("mini_cnt", 0) >= 10)
+                addPoint(playerResult.getId(), 40, "업적 달성");
+            if ((int) updatedMap.getOrDefault("game_cnt", 0) >= 20)
+                addPoint(playerResult.getId(), 40, "업적 달성");
+            if ((int) updatedMap.getOrDefault("win_cnt", 0) >= 10)
+                addPoint(playerResult.getId(), 50, "업적 달성");
+            if ((int) updatedMap.getOrDefault("mvp_cnt", 0) >= 5)
+                addPoint(playerResult.getId(), 50, "업적 달성");
+
         }
     }
 
