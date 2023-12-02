@@ -1,7 +1,6 @@
 package com.incandescent.woodaengserver.repository;
 
 import com.incandescent.woodaengserver.dto.DogInfo;
-import com.incandescent.woodaengserver.dto.GameRecordInfo;
 import com.incandescent.woodaengserver.dto.game.BallLocation;
 import com.incandescent.woodaengserver.dto.game.GamePlayerResult;
 import com.incandescent.woodaengserver.dto.game.GameResultResponse;

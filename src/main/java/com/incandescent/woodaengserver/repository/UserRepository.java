@@ -154,7 +154,7 @@ public class UserRepository {
     }
 
     public List<GameRecordInfo> getGameRecord(Long id) {
-        String getGameRecordQuery = "select * from gameRecord where id = ?";
+        String getGameRecordQuery = "select * from gameRecord where id = ? order by time desc";
         Object[] getGameRecordParams = new Object[]{id};
 
         return this.jdbcTemplate.query(getGameRecordQuery, ((rs, count) -> new GameRecordInfo(
