@@ -97,9 +97,14 @@ public class UserService {
         return userRepository.getGameRecord(id);
     }
 
-    public List<Ranking> getRanking() {
-        return userRepository.getRanking();
+    public List<Ranking> getRankingList() {
+        return userRepository.getRankingList();
     }
+
+    public int getMyRanking(Long id) {
+        return userRepository.getMyRank(id);
+    }
+
 
     public TrophyInfo getTrophy(Long id) {
         return userRepository.getTrophy(id);

@@ -2,21 +2,16 @@ package com.incandescent.woodaengserver.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incandescent.woodaengserver.dto.UpdateProfileRequest;
-import com.incandescent.woodaengserver.service.UserProvider;
 import com.incandescent.woodaengserver.dto.UserProfileResponse;
-import com.incandescent.woodaengserver.domain.User;
 import com.incandescent.woodaengserver.service.UserService;
 import com.incandescent.woodaengserver.service.auth.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -87,7 +82,13 @@ public class UserController {
 
     @GetMapping("/ranking")
     public ResponseEntity getRanking() {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.getRanking());
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getRankingList());
+    }
+
+    @GetMapping("myRank")
+    public ResponseEntity getMyRank(@RequestHeader("accessToken") String accessToken) {
+        Long id = jwtTokenProvider.getUseridFromAcs(accessToken);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getMyRanking(id));
     }
 
     @GetMapping("/trophy")

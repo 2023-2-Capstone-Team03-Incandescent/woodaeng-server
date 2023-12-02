@@ -180,7 +180,7 @@ public class UserRepository {
         ), getPointListParams);
     }
 
-    public List<Ranking> getRanking() {
+    public List<Ranking> getRankingList() {
         String getRankingQuery = "select id, (SELECT COUNT(*) + 1 FROM user u2 WHERE u2.win_cnt > u1.win_cnt) AS rank, image_id, nickname, win_cnt from user u1 order by win_cnt desc";
 
         return this.jdbcTemplate.query(getRankingQuery, ((rs, rowNum) -> new Ranking(
@@ -190,5 +190,11 @@ public class UserRepository {
                 rs.getString("nickname"),
                 rs.getInt("win_cnt"))
         ));
+    }
+    public int getMyRank(Long id) {
+        String selectUserQuery = "select rank() over (order by win_cnt desc) from user where id = ?";
+        Object[] selectUserParams = new Object[]{id};
+
+        return this.jdbcTemplate.queryForObject(selectUserQuery, Integer.class, selectUserParams);
     }
 }
