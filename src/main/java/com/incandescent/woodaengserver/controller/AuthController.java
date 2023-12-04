@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -120,7 +121,7 @@ public class AuthController {
     }
 
     @GetMapping("/oauth2/success")
-    public void loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken, HttpServletResponse response) throws UnsupportedEncodingException {
+    public void loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken, HttpServletResponse response) throws IOException {
         UserSigninResponse postLoginRes = new UserSigninResponse(accessToken, refreshToken);
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.add("Content-Type", "application/json");
@@ -138,6 +139,7 @@ public class AuthController {
 
         // 302 Redirect 상태 코드와 함께 리다이렉트 URI를 설정합니다.
         response.setStatus(HttpStatus.OK.value());
-        response.setHeader("Location", redirectUri);
+//        response.setHeader("Location", redirectUri);
+        response.sendRedirect(redirectUri);
     }
 }
