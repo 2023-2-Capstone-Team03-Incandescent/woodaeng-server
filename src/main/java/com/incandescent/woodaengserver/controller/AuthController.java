@@ -6,6 +6,7 @@ import com.incandescent.woodaengserver.service.auth.AuthService;
 import com.incandescent.woodaengserver.service.auth.JwtTokenProvider;
 import com.incandescent.woodaengserver.service.UserService;
 import com.incandescent.woodaengserver.domain.User;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -17,6 +18,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @RestController
@@ -115,12 +120,24 @@ public class AuthController {
     }
 
     @GetMapping("/oauth2/success")
-    public ResponseEntity loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken) {
+    public void loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken, HttpServletResponse response) throws UnsupportedEncodingException {
         UserSigninResponse postLoginRes = new UserSigninResponse(accessToken, refreshToken);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        return ResponseEntity.status(HttpStatus.OK)
-                .headers(headers)
-                .body(postLoginRes);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("Content-Type", "application/json");
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .headers(headers)
+//                .body(postLoginRes);
+
+
+
+
+        // 이 부분에서 앱으로 리다이렉트를 수행합니다.
+        String redirectUri = "com.example.didyouseemydog://success" +
+                "?access-token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8.toString()) +
+                "&refresh-token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.toString());
+
+        // 302 Redirect 상태 코드와 함께 리다이렉트 URI를 설정합니다.
+        response.setStatus(HttpStatus.OK.value());
+        response.setHeader("Location", redirectUri);
     }
 }
