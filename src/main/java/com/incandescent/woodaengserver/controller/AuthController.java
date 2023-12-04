@@ -132,7 +132,7 @@ public class AuthController {
 
 
         // 이 부분에서 앱으로 리다이렉트를 수행합니다.
-        String redirectUri = "com.example.didyouseemydog://success" +
+        String redirectUri = "didyouseemydog://success" +
                 "?access-token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8.toString()) +
                 "&refresh-token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.toString());
 
