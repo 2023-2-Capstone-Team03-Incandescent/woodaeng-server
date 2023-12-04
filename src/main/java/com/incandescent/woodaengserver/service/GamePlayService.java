@@ -406,7 +406,8 @@ public class GamePlayService {
             ArrayNode coordinatesJson = (ArrayNode) geometryJson.get("coordinates");
             JsonNode coordinatesList = coordinatesJson.get(0);
 
-            dongName = String.valueOf(featuresJson.get("properties").get("regionName"));
+            dongName = featuresJson.get("properties").get("regionName").toString();
+            dongName = dongName.substring(1,dongName.length()-1);
 
             List<List<Double>> coorRes = new ArrayList<>();
             for (JsonNode coordinate : coordinatesList) {
