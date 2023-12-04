@@ -114,7 +114,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    @GetMapping("/oauth2/success/*")
+    @GetMapping("/oauth2/success")
     public ResponseEntity loginSuccess(@RequestParam("accessToken") String accessToken, @RequestParam("refreshToken") String refreshToken) {
         UserSigninResponse postLoginRes = new UserSigninResponse(accessToken, refreshToken);
         HttpHeaders headers = new HttpHeaders();
