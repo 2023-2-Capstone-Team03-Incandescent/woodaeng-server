@@ -49,13 +49,11 @@ public class UserController {
     @PostMapping("/profile")
     public ResponseEntity updateProfile(@RequestHeader("accessToken") String accessToken, @RequestParam("profile") String profileJson, @RequestParam("image") MultipartFile image) {
         try {
-            UpdateProfileRequest updateProfileRequest = new ObjectMapper().readValue(profileJson, UpdateProfileRequest.class);
-            if(Objects.equals(jwtTokenProvider.getUseridFromAcs(accessToken), updateProfileRequest.getId())) {
+                UpdateProfileRequest updateProfileRequest = new ObjectMapper().readValue(profileJson, UpdateProfileRequest.class);
+                Long id = jwtTokenProvider.getUseridFromAcs(accessToken);
+                updateProfileRequest.setId(id);
                 userService.updateProfile(updateProfileRequest, image);
                 return ResponseEntity.status(HttpStatus.OK).build();
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
