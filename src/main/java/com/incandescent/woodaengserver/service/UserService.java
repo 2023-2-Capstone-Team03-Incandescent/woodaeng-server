@@ -109,4 +109,8 @@ public class UserService {
     public TrophyInfo getTrophy(Long id) {
         return userRepository.getTrophy(id);
     }
+
+    public Long getIdFromEmail(String email) throws Exception {
+        return userProvider.retrieveByEmail(email).getId();
+    }
 }

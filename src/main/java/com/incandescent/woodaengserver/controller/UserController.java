@@ -60,6 +60,20 @@ public class UserController {
         }
     }
 
+    @PostMapping("/profile/{email}")
+    public ResponseEntity registProfile(@PathVariable("email") String email, @RequestParam("profile") String profileJson, @RequestParam("image") MultipartFile image) {
+        try {
+            UpdateProfileRequest updateProfileRequest = new ObjectMapper().readValue(profileJson, UpdateProfileRequest.class);
+            Long id = userService.getIdFromEmail(email);
+            updateProfileRequest.setId(id);
+            userService.updateProfile(updateProfileRequest, image);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/point")
     public ResponseEntity getPoint(@RequestHeader("accessToken") String accessToken) {
         Long id = jwtTokenProvider.getUseridFromAcs(accessToken);
