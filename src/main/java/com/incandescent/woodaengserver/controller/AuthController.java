@@ -129,4 +129,11 @@ public class AuthController {
                 .headers(headers)
                 .body(postLoginRes);
     }
+
+
+    @GetMapping("/checkEmail")
+    public ResponseEntity checkEmain(@RequestParam("email") String email) throws Exception {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userProvider.checkEmail(email));
+    }
 }
