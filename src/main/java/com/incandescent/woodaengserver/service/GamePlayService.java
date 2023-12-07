@@ -221,15 +221,21 @@ public class GamePlayService {
 
 
     public void realTimeLocation(String gameCode, PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
-        GeoOperations<String, String> ops = redisTemplate.opsForGeo();
-        ops.remove("NearPlayer", String.valueOf(playerMatchRequest.getId()));
-        ops.add("NearPlayer", new Point(playerMatchRequest.getLongitude(), playerMatchRequest.getLatitude()), String.valueOf(playerMatchRequest.getId()));
+//        GeoOperations<String, String> ops = redisTemplate.opsForGeo();
+//        ops.remove("NearPlayer", String.valueOf(playerMatchRequest.getId()));
+//        ops.add("NearPlayer", new Point(playerMatchRequest.getLongitude(), playerMatchRequest.getLatitude()), String.valueOf(playerMatchRequest.getId()));
+//
+//        List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
+//
+//        if (nearPlayerList.isEmpty())
+//            return;
+//        Long opponentId = nearPlayerList.get(0).getId();
 
-        List<PlayerLocation> nearPlayerList = findNearByLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude(), gameRepository.selectTeam(playerMatchRequest.getId()));
+        gameRepository.updatePlayerLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude());
 
-        if (nearPlayerList.isEmpty())
+        Long opponentId = gameRepository.selectNearPlayer(playerMatchRequest.getId());
+        if (opponentId == null)
             return;
-        Long opponentId = nearPlayerList.get(0).getId();
 
         int gameType = (int) Math.round(Math.random());
         String question = null;

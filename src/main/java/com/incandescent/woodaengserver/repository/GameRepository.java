@@ -13,7 +13,6 @@ import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Repository
@@ -48,6 +47,51 @@ public class GameRepository {
             this.jdbcTemplate.update(updatePlayerQuery, updatePlayerParams);
         }
 
+    }
+    
+    public void updatePlayerLocation(Long id, double latitude, double longitude) {
+        String updatePlayerLocationQuery = "update player set latitude = ?, longitude = ? where user_id = ?";
+        Object[] updatePlayerLocationParams = new Object[]{latitude, longitude, id};
+        
+        this.jdbcTemplate.update(updatePlayerLocationQuery, updatePlayerLocationParams);
+    }
+    
+    public Long selectNearPlayer(Long id) {
+        HashMap<String, Double> location = this.jdbcTemplate.queryForObject(
+                "select latitude, longitude from player where user_id = ?",
+                ((rs, rowNum) -> new HashMap<String, Double>() {{
+                        put("latitude", rs.getDouble("latitude"));
+                        put("longitude", rs.getDouble("longitude"));
+                }}),
+                id);
+
+        List<HashMap<String, Object>> sqlList = this.jdbcTemplate.query(
+                "select user_id, latitude, longitude from player where id != ?",
+                (rs, rowNum) -> {
+                    HashMap<String, Object> map = new HashMap<>();
+                    map.put("id", rs.getLong("user_id"));
+                    map.put("latitude", rs.getDouble("latitude"));
+                    map.put("longitude", rs.getDouble("longitude"));
+                    return map;
+                },
+                id);
+
+        Long nearPlayer = null;
+        
+        for (int i = 0; i < 5; i++) {
+            double lat = (double) sqlList.get(i).get("latitude");
+            double lon = (double) sqlList.get(i).get("longitude");
+
+            if ((location.get("latitude") - lat) * 60 * 60 * 30 * (location.get("latitude") - lat) * 60 * 60 * 30 + (location.get("longitude") - lon) * 60 * 60 * 24 * (location.get("longitude") - lon) * 60 * 60 * 24 < 100) {
+                nearPlayer = (Long) sqlList.get(i).get("id");
+            }
+
+            if (nearPlayer != null) {
+                break;
+            }
+        }
+        
+        return nearPlayer;
     }
 
     public void insertBalls (String game_code, List<BallLocation> balls) {
