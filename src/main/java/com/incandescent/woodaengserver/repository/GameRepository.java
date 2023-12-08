@@ -66,7 +66,7 @@ public class GameRepository {
                 id);
 
         List<HashMap<String, Object>> sqlList = this.jdbcTemplate.query(
-                "select user_id, latitude, longitude from player where id != ?",
+                "select user_id, latitude, longitude from player where user_id != ?",
                 (rs, rowNum) -> {
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("id", rs.getLong("user_id"));
