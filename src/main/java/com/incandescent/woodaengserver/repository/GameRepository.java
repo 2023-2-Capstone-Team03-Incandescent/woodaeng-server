@@ -205,7 +205,7 @@ public class GameRepository {
 
     public DogInfo selectDog(Long id) {
         //이름 나이 견종 성별
-        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where user_id = ?";
+        String selectDogQuery = "select dog_name, dog_age, dog_breed, dog_sex from user where id = ?";
         Object[] selectDogParams = new Object[]{id};
         return this.jdbcTemplate.queryForObject(selectDogQuery, (rs, count) -> new DogInfo(
                 rs.getString("dog_name"),
