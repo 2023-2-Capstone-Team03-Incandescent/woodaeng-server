@@ -272,7 +272,9 @@ public class GamePlayService {
         HashMap<Integer, String> options = new HashMap<>();
         int answer = 0;
 
-        DogInfo dog = gameRepository.selectDog(id);
+//        DogInfo dog = gameRepository.selectDog(id);
+
+        DogInfo dog = gameRepository.selectDog(1L);
 
         switch (questionType) {
             case 0: //나이
