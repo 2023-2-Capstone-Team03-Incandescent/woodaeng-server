@@ -181,7 +181,7 @@ public class UserRepository {
     }
 
     public List<Ranking> getRankingList() {
-        String getRankingQuery = "select id, (SELECT COUNT(*) + 1 FROM user u2 WHERE u2.win_cnt > u1.win_cnt) AS rank, image_id, nickname, win_cnt from user u1 order by win_cnt desc";
+        String getRankingQuery = "select id, rank() over (order by win_cnt desc) AS rank, image_id, nickname, win_cnt from user order by win_cnt desc";
 
         return this.jdbcTemplate.query(getRankingQuery, ((rs, rowNum) -> new Ranking(
                 rs.getLong("id"),
