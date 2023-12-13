@@ -1,6 +1,5 @@
 package com.incandescent.woodaengserver.service;
 
-import ch.hsr.geohash.GeoHash;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,15 +53,15 @@ public class GamePlayService {
     private static String dongName = null;
 
     @Autowired
-    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository, UserRepository userRepository,SetOperations<String, String> setOperations) {
+    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository, UserRepository userRepository) {
         this.redisTemplate = redisTemplate;
         this.container = container;
         this.messagingTemplate = messagingTemplate;
         this.redisPublisher = redisPublisher;
         this.redisSubscriber = redisSubscriber;
+        this.setOperations = redisTemplate.opsForSet();
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
-        this.setOperations = redisTemplate.opsForSet();
     }
 
     public synchronized void subscribeToRedis(String topic) {
