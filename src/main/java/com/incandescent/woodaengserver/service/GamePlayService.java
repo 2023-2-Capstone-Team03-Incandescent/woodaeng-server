@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.incandescent.woodaengserver.dto.DogInfo;
+import com.incandescent.woodaengserver.dto.UserProfileResponse;
 import com.incandescent.woodaengserver.dto.game.*;
 import com.incandescent.woodaengserver.repository.GameRepository;
 import com.incandescent.woodaengserver.repository.UserRepository;
@@ -19,6 +20,7 @@ import org.springframework.data.geo.*;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -44,6 +46,7 @@ public class GamePlayService {
     private static SimpMessagingTemplate messagingTemplate = null;
     private final RedisPublisher redisPublisher;
     private final RedisSubscriber redisSubscriber;
+    private final SetOperations<String, String> setOperations;
     private static int goldNum = 20;
     private static int randNum = 30;
     private static GameRepository gameRepository = null;
@@ -51,7 +54,7 @@ public class GamePlayService {
     private static String dongName = null;
 
     @Autowired
-    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository, UserRepository userRepository) {
+    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository, UserRepository userRepository,SetOperations<String, String> setOperations) {
         this.redisTemplate = redisTemplate;
         this.container = container;
         this.messagingTemplate = messagingTemplate;
@@ -59,6 +62,7 @@ public class GamePlayService {
         this.redisSubscriber = redisSubscriber;
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
+        this.setOperations = setOperations;
     }
 
     public synchronized void subscribeToRedis(String topic) {
@@ -263,7 +267,10 @@ public class GamePlayService {
 
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 
-        GameMiniResponse gameMiniResponse = new GameMiniResponse(startTime.toString(), playerMatchRequest.getId(), userRepository.selectImageById(playerMatchRequest.getId()), gameType, opponentId, userRepository.selectImageById(opponentId), question, options, answer);
+        Long id = playerMatchRequest.getId();
+        UserProfileResponse profile = userRepository.selectProfileById(id);
+        UserProfileResponse opProf = userRepository.selectProfileById(opponentId);
+        GameMiniResponse gameMiniResponse = new GameMiniResponse(startTime.toString(), id, profile.getImage_id(), profile.getDog_name(), gameRepository.selectTeam(id), gameType, opponentId, opProf.getImage_id(), opProf.getDog_name(), question, options, answer);
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
         messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
@@ -353,6 +360,49 @@ public class GamePlayService {
         quiz.add(answer);
 
         return quiz;
+    }
+
+    public void miniResult(String gameCode, PlayerMiniWinner playerMiniWinner) throws JsonProcessingException {
+
+        setOperations.add("miniQueue:" + gameCode, playerMiniWinner.toString());
+
+        if (setOperations.size("miniQueue:" + gameCode) == 2) {
+            Set<String> miniQueue = setOperations.members("miniQueue:" + gameCode);
+
+            List list = List.of(miniQueue.toArray());
+
+            Long winnerId = null;
+            
+            for (int i = 0; i < list.size(); i++) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(list.get(i).toString());
+                JsonNode id = jsonNode.get("id");
+                JsonNode win = jsonNode.get("win");
+
+                if (win.asInt() == 1) {
+                    winnerId = id.asLong();
+                    break;
+                }
+            }
+
+
+
+            List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, gameRepository.selectTeam(winnerId) == 0 ? 1: 0);
+            int ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
+
+            int ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
+
+
+
+            MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2);
+
+
+            messagingTemplate.convertAndSend("/topic/game/mini/" + gameCode, miniWinnerResponse);
+
+            setOperations.remove("miniQueue:" + gameCode, miniQueue.toArray());
+        }
     }
 
     public static class endJob implements Job {

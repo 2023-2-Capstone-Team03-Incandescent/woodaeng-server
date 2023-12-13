@@ -2,10 +2,7 @@ package com.incandescent.woodaengserver.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.incandescent.woodaengserver.domain.Player;
-import com.incandescent.woodaengserver.dto.game.BallLocation;
-import com.incandescent.woodaengserver.dto.game.GamePlayRequest;
-import com.incandescent.woodaengserver.dto.game.GameReadyRequest;
-import com.incandescent.woodaengserver.dto.game.PlayerMatchRequest;
+import com.incandescent.woodaengserver.dto.game.*;
 import com.incandescent.woodaengserver.repository.GameRepository;
 import com.incandescent.woodaengserver.service.GameMatchingService;
 import com.incandescent.woodaengserver.service.GamePlayService;
@@ -50,5 +47,10 @@ public class GameController {
     @MessageMapping("/game/location/{gameCode}")
     public void location(@DestinationVariable String gameCode, @Payload PlayerMatchRequest playerMatchRequest) throws JsonProcessingException {
         gamePlayService.realTimeLocation(gameCode, playerMatchRequest);
+    }
+
+    @MessageMapping("/game/mini/{gameCode}")
+    public void mini(@DestinationVariable String gameCode, @Payload PlayerMiniWinner playerMiniWinner) throws JsonProcessingException {
+        gamePlayService.miniResult(gameCode, playerMiniWinner);
     }
 }
