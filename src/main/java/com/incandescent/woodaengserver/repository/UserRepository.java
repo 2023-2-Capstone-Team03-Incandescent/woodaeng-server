@@ -195,7 +195,8 @@ public class UserRepository {
         ));
     }
     public int getMyRank(Long id) {
-        String selectUserQuery = "select rank() over (order by win_cnt desc) from user where id = ?";
+//        String selectUserQuery = "select id, rank() over (order by win_cnt desc) AS ranking from user where id = ?";
+        String selectUserQuery = "SELECT ranking FROM (SELECT u1.id, ( @rank := @rank + 1 ) AS ranking FROM user u1, ( SELECT @rank := 0 ) AS u2 ORDER BY u1.win_cnt DESC) u3 WHERE id = ?";
         Object[] selectUserParams = new Object[]{id};
 
         return this.jdbcTemplate.queryForObject(selectUserQuery, Integer.class, selectUserParams);
