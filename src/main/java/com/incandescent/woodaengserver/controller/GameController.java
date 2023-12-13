@@ -50,7 +50,7 @@ public class GameController {
     }
 
     @MessageMapping("/game/mini/{gameCode}")
-    public void mini(@DestinationVariable String gameCode, @Payload PlayerMiniWinner playerMiniWinner) throws JsonProcessingException {
+    public void mini(@DestinationVariable String gameCode, @Payload PlayerMiniWinner playerMiniWinner) {
         gamePlayService.miniResult(gameCode, playerMiniWinner);
     }
 }
