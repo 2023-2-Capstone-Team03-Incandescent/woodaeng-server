@@ -134,7 +134,10 @@ public class UserRepository {
         String getPointQuery = "select sum(point) from point where id = ?";
         Object[] getPointParams = new Object[]{id};
 
-        return this.jdbcTemplate.queryForObject(getPointQuery, Integer.class, getPointParams);
+        Integer result = this.jdbcTemplate.queryForObject(getPointQuery, Integer.class, getPointParams);
+        if (result == null)
+            result = 0;
+        return result;
     }
 
     public TrophyInfo getTrophy(Long id) {

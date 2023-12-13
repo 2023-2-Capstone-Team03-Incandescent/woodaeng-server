@@ -224,9 +224,11 @@ public class GameRepository {
 
             if (gameResultResponse.getTeam() == playerResult.getTeam())
                 addPoint(playerResult.getId(), 30, "게임 승리");
+            else
+                addPoint(playerResult.getId(), 10, "게임 패배");
 
             if (mvp == playerResult.getId())
-                addPoint(playerResult.getId(), 100, "MVP 달성");
+                addPoint(playerResult.getId(), 50, "MVP 달성");
 
 
             String savetrophyQuery = "select * from trohpy where id = ?";

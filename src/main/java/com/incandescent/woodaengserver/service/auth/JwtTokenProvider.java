@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Calendar;
 import java.util.Date;
 
 @Component
@@ -52,10 +53,14 @@ public class JwtTokenProvider {
         Claims claims = Jwts.claims().setSubject(userid.toString());
 
         Date now = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(now);
+        cal.add(Calendar.SECOND, (int) JWT_ACCESS_TOKEN_EXPTIME);
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + JWT_ACCESS_TOKEN_EXPTIME))
+//                .setExpiration(new Date(now.getTime()  + JWT_ACCESS_TOKEN_EXPTIME))
+                .setExpiration(cal.getTime())
                 .signWith(accessKey, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -64,10 +69,14 @@ public class JwtTokenProvider {
         Claims claims = Jwts.claims().setSubject(userid.toString());
 
         Date now = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(now);
+        cal.add(Calendar.SECOND, (int) JWT_REFRESH_TOKEN_EXPTIME);
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + JWT_REFRESH_TOKEN_EXPTIME))
+//                .setExpiration(new Date(now.getTime()  + JWT_REFRESH_TOKEN_EXPTIME))
+                .setExpiration(cal.getTime())
                 .signWith(accessKey, SignatureAlgorithm.HS256)
                 .compact();
     }
