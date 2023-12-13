@@ -45,7 +45,6 @@ public class GamePlayService {
     private static SimpMessagingTemplate messagingTemplate = null;
     private final RedisPublisher redisPublisher;
     private final RedisSubscriber redisSubscriber;
-    private final SetOperations<String, String> setOperations;
     private static int goldNum = 20;
     private static int randNum = 30;
     private static GameRepository gameRepository = null;
@@ -59,7 +58,6 @@ public class GamePlayService {
         this.messagingTemplate = messagingTemplate;
         this.redisPublisher = redisPublisher;
         this.redisSubscriber = redisSubscriber;
-        this.setOperations = redisTemplate.opsForSet();
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
     }
@@ -361,47 +359,28 @@ public class GamePlayService {
         return quiz;
     }
 
-    public void miniResult(String gameCode, PlayerMiniWinner playerMiniWinner) throws JsonProcessingException {
+    public void miniResult(String gameCode, PlayerMiniWinner playerMiniWinner) {
+        Long winnerId;
 
-        setOperations.add("miniQueue:" + gameCode, playerMiniWinner.toString());
+        if (playerMiniWinner.getWin() == 0)
+            return;
 
-        if (setOperations.size("miniQueue:" + gameCode) == 2) {
-            Set<String> miniQueue = setOperations.members("miniQueue:" + gameCode);
+        winnerId = playerMiniWinner.getId();
 
-            List list = List.of(miniQueue.toArray());
 
-            Long winnerId = null;
-            
-            for (int i = 0; i < list.size(); i++) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode jsonNode = objectMapper.readTree(list.get(i).toString());
-                JsonNode id = jsonNode.get("id");
-                JsonNode win = jsonNode.get("win");
+        List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, gameRepository.selectTeam(winnerId) == 0 ? 1: 0);
+        int ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+        gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
 
-                if (win.asInt() == 1) {
-                    winnerId = id.asLong();
-                    break;
-                }
-            }
+        int ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+        gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
 
 
 
-            List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, gameRepository.selectTeam(winnerId) == 0 ? 1: 0);
-            int ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
-            gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
-
-            int ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
-            gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
+        MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2);
 
 
-
-            MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2);
-
-
-            messagingTemplate.convertAndSend("/topic/game/mini/" + gameCode, miniWinnerResponse);
-
-            setOperations.remove("miniQueue:" + gameCode, miniQueue.toArray());
-        }
+        messagingTemplate.convertAndSend("/topic/game/mini/" + gameCode, miniWinnerResponse);
     }
 
     public static class endJob implements Job {
