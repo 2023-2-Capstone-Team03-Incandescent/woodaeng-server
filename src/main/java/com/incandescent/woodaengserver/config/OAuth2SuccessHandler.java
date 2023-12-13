@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -36,17 +38,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         authService.registerRefreshToken(oAuth2User.getUser().getId(),refreshToken);
 
-//        targetUrl = UriComponentsBuilder.fromUriString("/auth/oauth2/success")
-//                .queryParam("accessToken",accessToken)
-//                .queryParam("refreshToken",refreshToken)
-//                .build().toUriString();
-//        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+        targetUrl = UriComponentsBuilder.fromUriString("/auth/oauth2/success")
+                .queryParam("accessToken",accessToken)
+                .queryParam("refreshToken",refreshToken)
+                .build().toUriString();
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
 
-        String redirectUri = "didyouseemydog://success" +
-                "?access-token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8.toString()) +
-                "&refresh-token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.toString());
-
-        response.setStatus(HttpStatus.OK.value());
-        response.setHeader("Location", redirectUri);
+//        String redirectUri = "didyouseemydog://success" +
+//                "?access-token=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8.toString()) +
+//                "&refresh-token=" + URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.toString());
+//
+//        response.setStatus(HttpStatus.OK.value());
+//        response.setHeader("Location", redirectUri);
     }
 }
