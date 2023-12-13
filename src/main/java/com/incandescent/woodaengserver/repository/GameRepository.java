@@ -49,11 +49,25 @@ public class GameRepository {
 
     }
     
-    public void updatePlayerLocation(Long id, double latitude, double longitude) {
-        String updatePlayerLocationQuery = "update player set latitude = ?, longitude = ? where user_id = ?";
-        Object[] updatePlayerLocationParams = new Object[]{latitude, longitude, id};
-        
+    public int updatePlayerLocation(Long id, double latitude, double longitude) {
+        String updatePlayerLocationQuery = "select latitude, longitude from player where user_id = ?";
+        Object[] updatePlayerLocationParams = new Object[]{id};
+
+        HashMap<String, Double> location = this.jdbcTemplate.queryForObject(updatePlayerLocationQuery,
+                ((rs, rowNum) -> new HashMap<String, Double>() {{
+                    put("latitude", rs.getDouble("latitude"));
+                    put("longitude", rs.getDouble("longitude"));
+                }}), updatePlayerLocationParams);
+
+        updatePlayerLocationQuery = "update player set latitude = ?, longitude = ? where user_id = ?";
+        updatePlayerLocationParams = new Object[]{latitude, longitude, id};
+
         this.jdbcTemplate.update(updatePlayerLocationQuery, updatePlayerLocationParams);
+
+        if ((location.get("latitude") - latitude) * 60 * 60 * 30 * (location.get("latitude") - latitude) * 60 * 60 * 30 + (location.get("longitude") - longitude) * 60 * 60 * 24 * (location.get("longitude") - longitude) * 60 * 60 * 24 < 10)
+            return 0;
+
+        return 1;
     }
     
     public Long selectNearPlayer(Long id) {

@@ -12,8 +12,10 @@ import java.util.HashMap;
 public class GameMiniResponse {
     private String startTime;
     private Long id;
+    private String myImage;
     private int gameType;
     private Long opponentId;
+    private String opponentImage;
     private String question;
     private HashMap<Integer, String> options;
     private int answer;

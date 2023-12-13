@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.incandescent.woodaengserver.dto.DogInfo;
 import com.incandescent.woodaengserver.dto.game.*;
 import com.incandescent.woodaengserver.repository.GameRepository;
+import com.incandescent.woodaengserver.repository.UserRepository;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -46,16 +47,18 @@ public class GamePlayService {
     private static int goldNum = 20;
     private static int randNum = 30;
     private static GameRepository gameRepository = null;
+    private static UserRepository userRepository;
     private static String dongName = null;
 
     @Autowired
-    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository) {
+    public GamePlayService(RedisMessageListenerContainer container, RedisTemplate<String, String> redisTemplate, SimpMessagingTemplate messagingTemplate, RedisPublisher redisPublisher, RedisSubscriber redisSubscriber, GameRepository gameRepository, UserRepository userRepository) {
         this.redisTemplate = redisTemplate;
         this.container = container;
         this.messagingTemplate = messagingTemplate;
         this.redisPublisher = redisPublisher;
         this.redisSubscriber = redisSubscriber;
         this.gameRepository = gameRepository;
+        this.userRepository = userRepository;
     }
 
     public synchronized void subscribeToRedis(String topic) {
@@ -231,7 +234,10 @@ public class GamePlayService {
 //            return;
 //        Long opponentId = nearPlayerList.get(0).getId();
 
-        gameRepository.updatePlayerLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude());
+        int tf = gameRepository.updatePlayerLocation(playerMatchRequest.getId(), playerMatchRequest.getLatitude(), playerMatchRequest.getLongitude());
+
+        if (tf == 0)
+            return;
 
         Long opponentId = gameRepository.selectNearPlayer(playerMatchRequest.getId());
         if (opponentId == null)
@@ -257,7 +263,7 @@ public class GamePlayService {
 
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
 
-        GameMiniResponse gameMiniResponse = new GameMiniResponse(startTime.toString(), playerMatchRequest.getId(), gameType, opponentId, question, options, answer);
+        GameMiniResponse gameMiniResponse = new GameMiniResponse(startTime.toString(), playerMatchRequest.getId(), userRepository.selectImageById(playerMatchRequest.getId()), gameType, opponentId, userRepository.selectImageById(opponentId), question, options, answer);
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
         messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
