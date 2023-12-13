@@ -62,7 +62,7 @@ public class GamePlayService {
         this.redisSubscriber = redisSubscriber;
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
-        this.setOperations = setOperations;
+        this.setOperations = redisTemplate.opsForSet();
     }
 
     public synchronized void subscribeToRedis(String topic) {
