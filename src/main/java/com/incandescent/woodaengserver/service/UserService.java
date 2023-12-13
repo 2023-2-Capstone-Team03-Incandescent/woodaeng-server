@@ -72,9 +72,9 @@ public class UserService {
     public UserProfileResponse getProfile(Long id) {
         UserProfileResponse userProfileResponse = userRepository.selectProfileById(id);
 
-        String url = s3Client.getUrl(bucketName, userProfileResponse.getImage_id()).toString();
+//        String url = s3Client.getUrl(bucketName, userProfileResponse.getImage_id()).toString();
         return new UserProfileResponse(userProfileResponse.getId(), userProfileResponse.getNickname(),
-                url, userProfileResponse.getDog_name(), userProfileResponse.getDog_age(), userProfileResponse.getDog_breed(),
+                userProfileResponse.getImage_id(), userProfileResponse.getDog_name(), userProfileResponse.getDog_age(), userProfileResponse.getDog_breed(),
                 userProfileResponse.getDog_sex());
     }
 
@@ -82,7 +82,8 @@ public class UserService {
         return userRepository.checkNickname(nickname);
     }
     public String getProfileImage(Long id) {
-        return s3Client.getUrl(bucketName, userRepository.selectImageById(id)).toString();
+        return userRepository.selectImageById(id);
+//        return s3Client.getUrl(bucketName, userRepository.selectImageById(id)).toString();
     }
     
     public int getPoint(Long id) {
