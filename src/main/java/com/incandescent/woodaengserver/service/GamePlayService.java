@@ -73,7 +73,7 @@ public class GamePlayService {
 
     public synchronized void readyGame(String gameCode, Long id, int team) throws JsonProcessingException, SchedulerException {
         LocalDateTime startTime = LocalDateTime.now().plusSeconds(5);
-        LocalDateTime endTime = startTime.plusSeconds(150); // 150초
+        LocalDateTime endTime = startTime.plusMinutes(15); // 15분
 
         GameReadyResponse gameReadyResponse = new GameReadyResponse(startTime.toString());
         String jsonGameReadyResponse = new ObjectMapper().writeValueAsString(gameReadyResponse);
@@ -97,10 +97,10 @@ public class GamePlayService {
         LocalDateTime tempTime = startTime;
 
         while (true) {
-//            int randomTime = (int) (Math.random() * 3) + 3; // 3 ~ 5분
-//            tempTime.plusMinutes(randomTime);
-            int randomTime = (int) (Math.random() * 30) + 10; //10 ~ 40초
-            tempTime = tempTime.plusSeconds(randomTime);
+            int randomTime = (int) (Math.random() * 3) + 3; // 3 ~ 5분
+            tempTime.plusMinutes(randomTime);
+//            int randomTime = (int) (Math.random() * 30) + 10; //10 ~ 40초
+//            tempTime = tempTime.plusSeconds(randomTime);
 
             if(tempTime.isAfter(endTime))
                 break;

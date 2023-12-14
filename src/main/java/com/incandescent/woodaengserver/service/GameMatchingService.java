@@ -112,7 +112,7 @@ public class GameMatchingService {
             Set<String> locationQueue = setOperations.members("locationQueue:" + dongId);
             log.info("QUEUE SIZE: "+locationQueue.size());
 
-            if (locationQueue.size() >= 2) {
+            if (locationQueue.size() >= 6) {
                 AtomicLong counter = cellIdCounterMap.computeIfAbsent(String.valueOf(dongId), k -> new AtomicLong());
                 long incrementValue = counter.getAndIncrement();
 
@@ -146,8 +146,8 @@ public class GameMatchingService {
 
         Collections.shuffle(playerList);
 
-        teamRed = playerList.subList(0, 1);
-        teamBlue = playerList.subList(1, 2);
+        teamRed = playerList.subList(0, 3);
+        teamBlue = playerList.subList(3, 6);
 
 
 
