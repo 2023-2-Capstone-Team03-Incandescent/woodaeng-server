@@ -271,6 +271,7 @@ public class GamePlayService {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonGameLocationResponse = objectMapper.writeValueAsString(gameMiniResponse);
         messagingTemplate.convertAndSend("/topic/game/location/" + gameCode, jsonGameLocationResponse);
+        log.info(jsonGameLocationResponse);
     }
 
     public List<Object> getQuiz(Long id) {
