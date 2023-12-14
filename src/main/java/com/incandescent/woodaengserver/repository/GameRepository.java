@@ -202,12 +202,14 @@ public class GameRepository {
             team = 2;
         int blueS = 20 - redS;
 
-        selectResultQuery = "select user_id, team, ball_cnt, gold_cnt, box_cnt, mini_cnt from player where game_code = ?";
+        selectResultQuery = "select user_id, team, nickname, image_id, ball_cnt, gold_cnt, box_cnt, mini_cnt from player where game_code = ?";
         selectResultParams = new Object[]{game_code};
 
         List<GamePlayerResult> sqlList = this.jdbcTemplate.query(selectResultQuery, (rs, count) -> new GamePlayerResult(
                 rs.getLong("user_id"),
                 rs.getInt("team"),
+                rs.getString("nickname"),
+                rs.getString("image_id"),
                 rs.getInt("ball_cnt"),
                 rs.getInt("gold_cnt"),
                 rs.getInt("box_cnt"),

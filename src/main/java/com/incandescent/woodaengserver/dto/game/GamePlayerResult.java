@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 public class GamePlayerResult {
     private Long id;
     private int team;
+    private String nickname;
+    private String image;
     private int ball_cnt;
     private int gold_cnt;
     private int box_cnt;
