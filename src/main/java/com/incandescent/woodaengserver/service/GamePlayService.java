@@ -343,12 +343,20 @@ public class GamePlayService {
                     options.put(++num, breedList.get(i++));
                 }
                 break;
-            case 2: //성별
-                question = dog.getName() + "의 성별은 무엇일까요?";
-                int sex = dog.getSex();
-                options.put(1, "남자");
-                options.put(2, "여자");
-                answer = sex + 1;
+//            case 2: //성별
+//                question = dog.getName() + "의 성별은 무엇일까요?";
+//                int sex = dog.getSex();
+//                options.put(1, "남자");
+//                options.put(2, "여자");
+//                answer = sex + 1;
+//                break;
+            case 2: //상식
+                question = "다음 중 댕댕이가 절대 먹으면 안 되는 음식은?";
+                options.put(0, "닭가슴살");
+                options.put(1, "포도");
+                options.put(2, "고구마");
+                options.put(3, "브로콜리");
+                answer = 1;
                 break;
         }
 
