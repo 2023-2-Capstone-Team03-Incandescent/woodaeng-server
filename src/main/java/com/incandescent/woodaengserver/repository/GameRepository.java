@@ -27,8 +27,10 @@ public class GameRepository {
 
 
     public void insertPlayer(Long id, double latitude, double longitude) {
-        String insertGameQuery = "insert into player (user_id, latitude, longitude, team, game_code, ball_cnt, gold_cnt, box_cnt, mini_cnt) values (?,?,?,0,'0',0,0,0,0)";
-        Object[] insertGameParams = new Object[]{id, latitude, longitude};
+        String nickname = this.jdbcTemplate.queryForObject("select nickname from user where id = ?", String.class, id);
+
+        String insertGameQuery = "insert into player (user_id, nickname, latitude, longitude, team, game_code, ball_cnt, gold_cnt, box_cnt, mini_cnt) values (?,?,?,?,0,'0',0,0,0,0)";
+        Object[] insertGameParams = new Object[]{id, nickname, latitude, longitude};
 
         this.jdbcTemplate.update(insertGameQuery, insertGameParams);
     }
