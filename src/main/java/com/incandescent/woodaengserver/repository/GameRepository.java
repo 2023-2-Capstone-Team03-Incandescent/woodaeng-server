@@ -245,7 +245,7 @@ public class GameRepository {
                 addPoint(playerResult.getId(), 50, "MVP 달성");
 
 
-            String savetrophyQuery = "select * from trohpy where id = ?";
+            String savetrophyQuery = "select * from trophy where id = ?";
             saveRecordParams = new Object[]{playerResult.getId()};
             HashMap trophyMap = this.jdbcTemplate.queryForObject(savetrophyQuery, (rs, rowNum) -> new HashMap() {{
                 put("ball_cnt", rs.getInt("ball_cnt"));
@@ -278,7 +278,7 @@ public class GameRepository {
             this.jdbcTemplate.update(savetrophyQuery, saveRecordParams);
 
 
-            savetrophyQuery = "select * from trohpy where id = ?";
+            savetrophyQuery = "select * from trophy where id = ?";
             saveRecordParams = new Object[]{playerResult.getId()};
             HashMap updatedMap = this.jdbcTemplate.queryForObject(savetrophyQuery, (rs, rowNum) -> new HashMap() {{
                 for (Object str : trophyList) {

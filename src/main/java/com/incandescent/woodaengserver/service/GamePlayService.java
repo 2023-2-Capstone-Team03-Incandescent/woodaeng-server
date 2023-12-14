@@ -377,7 +377,9 @@ public class GamePlayService {
 
 
 
-        MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2);
+        int rs = gameRepository.selectRedScore(gameCode);
+
+        MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2, rs, 20-rs);
 
 
         messagingTemplate.convertAndSend("/topic/game/mini/" + gameCode, miniWinnerResponse);

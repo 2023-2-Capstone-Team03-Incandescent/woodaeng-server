@@ -12,4 +12,6 @@ public class MiniWinnerResponse {
     private String winnerDog;
     private int ballId1;
     private int ballId2;
+    private int teamRScore;
+    private int teamBScore;
 }
