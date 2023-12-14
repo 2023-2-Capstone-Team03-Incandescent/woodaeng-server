@@ -244,7 +244,7 @@ public class GamePlayService {
         if (opponentId == null)
             return;
 
-        int gameType = (int) Math.round(Math.random());
+        int gameType = Math.round((float)Math.random());
         String question = null;
         HashMap<Integer, String> options = null;
         int answer = 0;
@@ -369,19 +369,38 @@ public class GamePlayService {
         winnerId = playerMiniWinner.getId();
 
 
-        List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, gameRepository.selectTeam(winnerId) == 0 ? 1: 0);
-        int ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
-        gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
+        int winnerTeam = gameRepository.selectTeam(winnerId);
+        int ball1, ball2;
 
-        int ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
-        gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + (gameRepository.selectTeam(winnerId) == 0 ? 1 : -1));
+        if (winnerTeam == 0) {
+            List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, 1);
+            ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + 1);
 
+            ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            while (true) {
+                if (ball1 != ball2)
+                    break;
+                ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            }
+            gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) + 1);
+        } else {
+            List<Integer> otherBalls = gameRepository.selectOurBall(gameCode, 0);
+            ball1 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            gameRepository.updateBallColor(gameCode, winnerId, ball1, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) - 1);
 
+            ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            while (true) {
+                if (ball1 != ball2)
+                    break;
+                ball2 = otherBalls.get((int) (Math.random() * otherBalls.size()));
+            }
+            gameRepository.updateBallColor(gameCode, winnerId, ball2, gameRepository.selectTeam(winnerId), gameRepository.selectRedScore(gameCode) - 1);
+        }
 
         int rs = gameRepository.selectRedScore(gameCode);
 
         MiniWinnerResponse miniWinnerResponse = new MiniWinnerResponse(winnerId, userRepository.selectProfileById(winnerId).getDog_name(), ball1, ball2, rs, 20-rs);
-
 
         messagingTemplate.convertAndSend("/topic/game/mini/" + gameCode, miniWinnerResponse);
     }
